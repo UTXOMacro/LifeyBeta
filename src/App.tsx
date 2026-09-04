@@ -6,6 +6,7 @@ import { FriendsScreen } from './screens/FriendsScreen';
 import { ConnectScreen } from './screens/ConnectScreen';
 import { YouScreen } from './screens/YouScreen';
 import { ModulesSettings } from './screens/settings/ModulesSettings';
+import { IntegrationsSettings } from './screens/settings/IntegrationsSettings';
 import { EvidenceSettings } from './screens/settings/EvidenceSettings';
 import { PrivacySettings } from './screens/settings/PrivacySettings';
 import { CaptureSheet } from './screens/CaptureSheet';
@@ -36,6 +37,7 @@ export default function App() {
         />
         <Route path="/you" element={<YouScreen />} />
         <Route path="/settings/modules" element={<ModulesSettings />} />
+        <Route path="/settings/integrations" element={<IntegrationsSettings />} />
         <Route path="/settings/evidence" element={<EvidenceSettings />} />
         <Route path="/settings/privacy" element={<PrivacySettings />} />
       </Routes>

@@ -62,6 +62,7 @@ export function YouScreen() {
       {/* Chevron settings rows */}
       <div className="settings-list">
         <ChevronRow icon={<GridIcon />} label="Modules" onClick={() => navigate('/settings/modules')} />
+        <ChevronRow icon={<PlugIcon />} label="Integrations" onClick={() => navigate('/settings/integrations')} />
         <ChevronRow icon={<DocIcon />} label="Evidence & sources" onClick={() => navigate('/settings/evidence')} />
         <ChevronRow icon={<ShieldIcon />} label="Privacy" onClick={() => navigate('/settings/privacy')} />
         <ChevronRow icon={<EditIcon />} label="Edit Home" onClick={() => navigate('/')} />
@@ -168,4 +169,7 @@ function EditIcon() {
 }
 function BellIcon() {
   return <svg width="20" height="20" viewBox="0 0 24 24" {...ic}><path d="M6 9a6 6 0 1 1 12 0c0 5 2 6 2 6H4s2-1 2-6" /><path d="M10 20a2 2 0 0 0 4 0" /></svg>;
+}
+function PlugIcon() {
+  return <svg width="20" height="20" viewBox="0 0 24 24" {...ic}><path d="M9 2v6M15 2v6" /><path d="M6 8h12v3a6 6 0 0 1-12 0z" /><path d="M12 17v5" /></svg>;
 }

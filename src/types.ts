@@ -173,3 +173,26 @@ export interface Profile {
   howImLiving: string;
   privacyDefault: Visibility;
 }
+
+// External data sources that feed signals into the Pulse model.
+export type IntegrationId =
+  | 'strava'
+  | 'apple-health'
+  | 'amazon'
+  | 'fitbit'
+  | 'oura'
+  | 'google-fit'
+  | 'myfitnesspal'
+  | 'instacart';
+
+export interface Integration {
+  id: IntegrationId;
+  name: string;
+  /** what this source informs, in plain language */
+  informs: string;
+  /** which Pulse modules it can feed */
+  modules: ModuleId[];
+  connected: boolean;
+  /** true once real OAuth/API is wired; false = coming soon */
+  available: boolean;
+}

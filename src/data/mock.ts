@@ -3,6 +3,7 @@ import type {
   ChatMessage,
   EvidenceCard,
   FriendEdge,
+  Integration,
   LifeContext,
   ModuleConfig,
   Post,
@@ -204,6 +205,76 @@ export const mockBeliefs: Belief[] = [
 export const mockPreferences: Preference[] = [
   { key: 'trackFood', value: true },
   { key: 'prefersMornings', value: true },
+];
+
+// ── Integrations (external sources that feed the Pulse model) ─
+// Movement, food/intake, and hygiene/care signals. connected + available
+// are mock flags; real version wires OAuth/API per provider.
+export const mockIntegrations: Integration[] = [
+  {
+    id: 'strava',
+    name: 'Strava',
+    informs: 'Runs, rides, and walks feed Move',
+    modules: ['movement'],
+    connected: false,
+    available: true,
+  },
+  {
+    id: 'apple-health',
+    name: 'Apple Health',
+    informs: 'Steps, workouts, and sleep feed Move + Sleep',
+    modules: ['movement', 'sleep'],
+    connected: false,
+    available: true,
+  },
+  {
+    id: 'amazon',
+    name: 'Amazon',
+    informs: 'Grocery + household orders inform Food and Care',
+    modules: ['food', 'care'],
+    connected: false,
+    available: true,
+  },
+  {
+    id: 'fitbit',
+    name: 'Fitbit',
+    informs: 'Activity and sleep feed Move + Sleep',
+    modules: ['movement', 'sleep'],
+    connected: false,
+    available: true,
+  },
+  {
+    id: 'oura',
+    name: 'Oura',
+    informs: 'Sleep quality and readiness feed Sleep',
+    modules: ['sleep'],
+    connected: false,
+    available: true,
+  },
+  {
+    id: 'myfitnesspal',
+    name: 'MyFitnessPal',
+    informs: 'Eating patterns inform Food (pattern, not calories)',
+    modules: ['food'],
+    connected: false,
+    available: false,
+  },
+  {
+    id: 'instacart',
+    name: 'Instacart',
+    informs: 'Grocery orders inform Food and Care',
+    modules: ['food', 'care'],
+    connected: false,
+    available: false,
+  },
+  {
+    id: 'google-fit',
+    name: 'Google Fit',
+    informs: 'Activity feeds Move',
+    modules: ['movement'],
+    connected: false,
+    available: false,
+  },
 ];
 
 // ── Evidence & sources (plain-language, no disease claims) ─

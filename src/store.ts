@@ -3,6 +3,8 @@ import type {
   Belief,
   ChatMessage,
   EvidenceCard,
+  Integration,
+  IntegrationId,
   LifeContext,
   ModuleConfig,
   ModuleId,
@@ -24,6 +26,7 @@ import {
   mockBeliefs,
   mockContext,
   mockEvidence,
+  mockIntegrations,
   mockPreferences,
   mockProfile,
   mockScores,
@@ -44,6 +47,7 @@ interface LifeyState {
   beliefs: Belief[];
   preferences: Preference[];
   evidence: EvidenceCard[];
+  integrations: Integration[];
   friendsCount: number;
 
   // module toggles
@@ -67,6 +71,9 @@ interface LifeyState {
 
   // privacy
   setPrivacyDefault: (v: Profile['privacyDefault']) => void;
+
+  // integrations
+  toggleIntegration: (id: IntegrationId) => void;
 
   // chat (Connect write path)
   sendMessage: (text: string) => void;
@@ -99,6 +106,7 @@ export const useStore = create<LifeyState>((set, get) => ({
   beliefs: mockBeliefs,
   preferences: mockPreferences,
   evidence: mockEvidence,
+  integrations: mockIntegrations,
   friendsCount: 12,
 
   toggleModule: (id) =>
@@ -170,6 +178,13 @@ export const useStore = create<LifeyState>((set, get) => ({
 
   setPrivacyDefault: (v) =>
     set((state) => ({ profile: { ...state.profile, privacyDefault: v } })),
+
+  toggleIntegration: (id) =>
+    set((state) => ({
+      integrations: state.integrations.map((i) =>
+        i.id === id && i.available ? { ...i, connected: !i.connected } : i,
+      ),
+    })),
 
   // Connect write path — every turn may persist a signal or preference,
   // then Pulse quietly refreshes (derived from scores/modules).
