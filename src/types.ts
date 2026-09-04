@@ -14,7 +14,15 @@ export type ModuleId =
 
 export type Visibility = 'me' | 'friends' | 'everyone';
 
-export type ScoreSource = 'manual' | 'device' | 'inferred';
+// How a score entered the system. Provenance is surfaced in Pulse History.
+export type ScoreSource =
+  | 'manual' // typed a number directly
+  | 'device' // Apple Health / device sync
+  | 'inferred' // parsed from natural language
+  | 'chat' // Connect conversation
+  | 'moment' // a shared moment / check-in
+  | 'grocery' // grocery order (Amazon/Instacart)
+  | 'strava'; // Strava activity
 
 export type WidgetId =
   | 'pulse'
@@ -164,6 +172,20 @@ export interface ChatMessage {
   role: 'user' | 'lifey';
   text: string;
   ts: number;
+}
+
+// A single Connect conversation (ChatGPT-style). Multiple can exist.
+// All conversations write into the SAME long-term profile memory
+// (beliefs / preferences / context / scores), so context is shared
+// and cumulative across chats — a broad memory window.
+export interface Conversation {
+  id: string;
+  title: string;
+  messages: ChatMessage[];
+  createdAt: number;
+  updatedAt: number;
+  /** true until the user sends the first message (auto-title pending) */
+  isDraft?: boolean;
 }
 
 export interface Profile {

@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type {
   Belief,
   ChatMessage,
+  Conversation,
   EvidenceCard,
   Integration,
   IntegrationId,
@@ -12,6 +13,7 @@ import type {
   Profile,
   PulsePart,
   Score,
+  ScoreSource,
   Task,
   TaskStatus,
   WidgetId,
@@ -28,10 +30,10 @@ import {
   mockEvidence,
   mockIntegrations,
   mockPreferences,
+  mockConversations,
   mockProfile,
   mockScores,
   mockTasks,
-  mockThread,
   mockWeek,
 } from './data/mock';
 
@@ -42,7 +44,9 @@ interface LifeyState {
   scores: Score[];
   tasks: Task[];
   week: boolean[];
-  thread: ChatMessage[];
+  // Connect: multiple conversations. All feed the same profile memory below.
+  conversations: Conversation[];
+  activeConversationId: string;
   context: LifeContext;
   beliefs: Belief[];
   preferences: Preference[];
@@ -75,13 +79,23 @@ interface LifeyState {
   // integrations
   toggleIntegration: (id: IntegrationId) => void;
 
-  // chat (Connect write path)
+  // chat (Connect write path) — targets the active conversation, and every
+  // turn may also persist shared long-term profile memory.
   sendMessage: (text: string) => void;
+
+  // conversations (ChatGPT-style multi-chat)
+  newConversation: () => string;
+  selectConversation: (id: string) => void;
+  renameConversation: (id: string, title: string) => void;
+  deleteConversation: (id: string) => void;
 
   // derived
   pulse: () => number;
   pulseParts: () => PulsePart[];
   activeModules: () => ModuleConfig[];
+  activeConversation: () => Conversation | undefined;
+  /** compact summary of what Lifey remembers across ALL chats */
+  memorySummary: () => string[];
 }
 
 // Strip widgets whose module is off, and drop empty slots.
@@ -101,7 +115,8 @@ export const useStore = create<LifeyState>((set, get) => ({
   scores: mockScores,
   tasks: mockTasks,
   week: mockWeek,
-  thread: mockThread,
+  conversations: mockConversations,
+  activeConversationId: mockConversations[0]?.id ?? '',
   context: mockContext,
   beliefs: mockBeliefs,
   preferences: mockPreferences,
@@ -186,50 +201,104 @@ export const useStore = create<LifeyState>((set, get) => ({
       ),
     })),
 
-  // Connect write path — every turn may persist a signal or preference,
-  // then Pulse quietly refreshes (derived from scores/modules).
+  // Connect write path — appends to the ACTIVE conversation, and every turn
+  // may also persist shared long-term profile memory (scores, preferences,
+  // pinned beliefs). Pulse quietly refreshes (derived from scores/modules).
   sendMessage: (text) =>
     set((state) => {
-      const userMsg: ChatMessage = {
-        id: `m-${Date.now()}`,
-        role: 'user',
-        text,
-        ts: Date.now(),
-      };
+      const now = Date.now();
+      const userMsg: ChatMessage = { id: `m-${now}`, role: 'user', text, ts: now };
       const reply: ChatMessage = {
-        id: `m-${Date.now() + 1}`,
+        id: `m-${now + 1}`,
         role: 'lifey',
         text: mockReply(text),
-        ts: Date.now() + 1,
+        ts: now + 1,
       };
 
-      const write = parseWrite(text);
-      const patch: Partial<LifeyState> = { thread: [...state.thread, userMsg, reply] };
+      // Update the active conversation: append both messages, auto-title from
+      // the first user message, drop draft flag, bump updatedAt.
+      const conversations = state.conversations.map((c) => {
+        if (c.id !== state.activeConversationId) return c;
+        const firstUser = !c.messages.some((m) => m.role === 'user');
+        return {
+          ...c,
+          title: firstUser && (c.isDraft || c.title === 'New chat') ? titleFrom(text) : c.title,
+          isDraft: false,
+          messages: [...c.messages, userMsg, reply],
+          updatedAt: now + 1,
+        };
+      });
+      const patch: Partial<LifeyState> = { conversations };
 
-      if (write?.kind === 'score') {
-        patch.scores = [
-          {
-            module: write.module,
-            date: new Date().toISOString().slice(0, 10),
-            source: 'inferred',
-            value1to10: write.value,
-            note: text.slice(0, 80),
-          },
-          ...state.scores,
-        ];
-      } else if (write?.kind === 'preference' && write.key === 'trackFood' && write.value === false) {
-        const modules = state.modules.map((m) =>
-          m.id === 'food' ? { ...m, enabled: false, showOnProfile: false } : m,
-        );
-        patch.modules = modules;
-        patch.layout = pruneLayout(state.layout, modules);
-        patch.preferences = [
-          ...state.preferences.filter((p) => p.key !== 'trackFood'),
-          { key: 'trackFood', value: false },
-        ];
+      // Shared profile memory writes (visible from every chat + on You).
+      // A single message can produce multiple scored signals (e.g. sleep +
+      // nutrition), each carrying its input source for Pulse History.
+      const writes = parseWrites(text, 'chat');
+      const today = new Date().toISOString().slice(0, 10);
+      const newScores: Score[] = [];
+      for (const w of writes) {
+        if (w.kind === 'score') {
+          newScores.push({
+            module: w.module,
+            date: today,
+            source: w.source,
+            value1to10: w.value,
+            note: w.note,
+          });
+        } else if (w.kind === 'preference' && w.key === 'trackFood' && w.value === false) {
+          const modules = state.modules.map((m) =>
+            m.id === 'food' ? { ...m, enabled: false, showOnProfile: false } : m,
+          );
+          patch.modules = modules;
+          patch.layout = pruneLayout(state.layout, modules);
+          patch.preferences = [
+            ...state.preferences.filter((p) => p.key !== 'trackFood'),
+            { key: 'trackFood', value: false },
+          ];
+        }
+      }
+      if (newScores.length > 0) {
+        patch.scores = [...newScores, ...state.scores];
+      }
+
+      // Pin durable statements as long-term beliefs (broad memory window).
+      const belief = extractBelief(text);
+      if (belief && !state.beliefs.some((b) => b.text.toLowerCase() === belief.toLowerCase())) {
+        patch.beliefs = [...state.beliefs, { id: `b-${now}`, text: belief, icon: 'spark', pinned: true }];
       }
 
       return patch;
+    }),
+
+  newConversation: () => {
+    const id = `c-${Date.now()}`;
+    set((state) => ({
+      conversations: [
+        { id, title: 'New chat', messages: [], createdAt: Date.now(), updatedAt: Date.now(), isDraft: true },
+        ...state.conversations,
+      ],
+      activeConversationId: id,
+    }));
+    return id;
+  },
+
+  selectConversation: (id) => set({ activeConversationId: id }),
+
+  renameConversation: (id, title) =>
+    set((state) => ({
+      conversations: state.conversations.map((c) =>
+        c.id === id ? { ...c, title: title.trim() || c.title } : c,
+      ),
+    })),
+
+  deleteConversation: (id) =>
+    set((state) => {
+      const remaining = state.conversations.filter((c) => c.id !== id);
+      const active =
+        state.activeConversationId === id
+          ? remaining[0]?.id ?? ''
+          : state.activeConversationId;
+      return { conversations: remaining, activeConversationId: active };
     }),
 
   pulse: () => {
@@ -243,47 +312,165 @@ export const useStore = create<LifeyState>((set, get) => ({
   },
 
   activeModules: () => get().modules.filter((m) => m.enabled),
+
+  activeConversation: () => {
+    const state = get();
+    return state.conversations.find((c) => c.id === state.activeConversationId);
+  },
+
+  // Broad, cross-chat memory that feeds the user's profile. Pulled from
+  // beliefs + preferences + context so it's the same in every conversation.
+  memorySummary: () => {
+    const state = get();
+    const out: string[] = [];
+    for (const b of state.beliefs) out.push(b.text);
+    for (const g of state.context.goals) out.push(g);
+    if (state.context.goodEnough) out.push(state.context.goodEnough);
+    for (const d of state.context.derailers) out.push(`Watch: ${d}`);
+    const trackFood = state.preferences.find((p) => p.key === 'trackFood');
+    if (trackFood && trackFood.value === false) out.push("Doesn't want food counted");
+    // de-dupe, cap for a tidy panel
+    return [...new Set(out)].slice(0, 8);
+  },
 }));
 
-// Very small NL parser for the demo: lets Connect write a food 1–10 or
-// "don't track food". Real version routes through an LLM tool call.
-type Write =
-  | { kind: 'score'; module: ModuleId; value: number }
-  | { kind: 'preference'; key: string; value: boolean };
+// Auto-title a new chat from its first message (ChatGPT-style).
+function titleFrom(text: string): string {
+  const clean = text.trim().replace(/\s+/g, ' ');
+  if (clean.length <= 34) return clean;
+  return clean.slice(0, 32).trimEnd() + '…';
+}
 
-function parseWrite(text: string): Write | null {
-  const t = text.toLowerCase();
-
-  if (/(don'?t|stop|no).*(track|count).*(food|bite|calorie)/.test(t) || /trackfood\s*=\s*false/.test(t)) {
-    return { kind: 'preference', key: 'trackFood', value: false };
-  }
-
-  // "food 7", "rate food 8/10", "food was a 6 today"
-  const foodMatch = t.match(/food\D{0,12}(\d{1,2})/);
-  if (foodMatch) {
-    const v = Math.min(10, Math.max(1, Number(foodMatch[1])));
-    return { kind: 'score', module: 'food', value: v };
-  }
-  const sleepMatch = t.match(/(slept|sleep)\D{0,12}(\d{1,2})/);
-  if (sleepMatch) {
-    const v = Math.min(10, Math.max(1, Number(sleepMatch[2])));
-    return { kind: 'score', module: 'sleep', value: v };
+// Pull a durable, first-person statement worth remembering long-term.
+function extractBelief(text: string): string | null {
+  const t = text.trim();
+  const lower = t.toLowerCase();
+  // Durable intent/preference phrasing → worth pinning.
+  if (/^(i want|i'd like|i prefer|i don'?t want|remember that|my goal|i'm trying)/.test(lower)) {
+    return titleFrom(t);
   }
   return null;
 }
 
+// NL parser for the demo: turns natural statements from Connect into scored
+// signals that move Pulse up or down. Real version routes through an LLM tool
+// call; this is deterministic + explainable for the demo.
+type ScoreWrite = {
+  kind: 'score';
+  module: ModuleId;
+  value: number;
+  source: ScoreSource;
+  note: string;
+};
+type PrefWrite = { kind: 'preference'; key: string; value: boolean };
+type Write = ScoreWrite | PrefWrite;
+
+const clamp = (n: number) => Math.min(10, Math.max(1, Math.round(n)));
+
+// Map sleep hours → a 1–10 that peaks around 7.5–8h.
+function sleepHoursToScore(h: number): number {
+  if (h >= 7 && h <= 9) return 9;
+  if (h >= 6.5) return 8;
+  if (h >= 6) return 6;
+  if (h >= 5) return 5;
+  if (h >= 4) return 3;
+  return 2;
+}
+
+// Map activity minutes → a 1–10 (more sustained movement scores higher).
+function activityMinsToScore(mins: number): number {
+  if (mins >= 60) return 9;
+  if (mins >= 40) return 8;
+  if (mins >= 25) return 7;
+  if (mins >= 15) return 6;
+  if (mins >= 5) return 5;
+  return 4;
+}
+
+const GOOD_FOOD = /(chicken|rice|salad|veg|veggie|vegetable|greens|home ?cooked|cooked at home|grilled|fish|salmon|fruit|oats|beans|lentil|soup|balanced)/;
+const BAD_FOOD = /(burger|fries|fast food|takeout|take-out|pizza|soda|candy|donut|fried|chips|junk|drive.?thru)/;
+
+export function parseWrites(text: string, source: ScoreSource = 'chat'): Write[] {
+  const t = text.toLowerCase();
+  const writes: Write[] = [];
+
+  // Preference: stop tracking nutrition/food.
+  if (/(don'?t|stop|no).*(track|count).*(food|nutrition|bite|calorie)/.test(t) || /trackfood\s*=\s*false/.test(t)) {
+    writes.push({ kind: 'preference', key: 'trackFood', value: false });
+    return writes;
+  }
+
+  // ── Sleep ────────────────────────────────────────────
+  // "slept 4 hours", "only got 5 hrs of sleep", "sleep 8"
+  const sleepHrs = t.match(/(?:slept|sleep|got)\D{0,10}(\d{1,2}(?:\.\d)?)\s*(?:h|hr|hrs|hour)/) ||
+    t.match(/(\d{1,2}(?:\.\d)?)\s*(?:h|hr|hrs|hours?)\D{0,10}(?:sleep|slept|in bed)/);
+  if (sleepHrs) {
+    const h = Number(sleepHrs[1]);
+    writes.push({ kind: 'score', module: 'sleep', value: clamp(sleepHoursToScore(h)), source, note: `${h}h sleep` });
+  } else {
+    const sleepRate = t.match(/sleep\D{0,8}(\d{1,2})\s*(?:\/\s*10)?/);
+    if (sleepRate && !/hour|hr|h\b/.test(t)) {
+      writes.push({ kind: 'score', module: 'sleep', value: clamp(Number(sleepRate[1])), source, note: 'sleep check-in' });
+    }
+  }
+
+  // ── Movement ────────────────────────────────────────
+  // "1 hour bike ride", "30 min walk", "ran 45 minutes"
+  const actHr = t.match(/(\d{1,2}(?:\.\d)?)\s*(?:hour|hr|hrs|h)\b.*?(bike|ride|run|walk|jog|swim|workout|gym|hike|cycl)/) ||
+    t.match(/(bike|ride|run|walk|jog|swim|workout|gym|hike|cycl).*?(\d{1,2}(?:\.\d)?)\s*(?:hour|hr|hrs|h)\b/);
+  const actMin = t.match(/(\d{1,3})\s*(?:min|mins|minute)\b.*?(bike|ride|run|walk|jog|swim|workout|gym|hike|cycl)/) ||
+    t.match(/(bike|ride|run|walk|jog|swim|workout|gym|hike|cycl).*?(\d{1,3})\s*(?:min|mins|minute)\b/);
+  if (actHr) {
+    const hrNum = Number(actHr[1].match(/\d/) ? actHr[1] : actHr[2]);
+    const mins = (isNaN(hrNum) ? Number(actHr[2]) : hrNum) * 60;
+    writes.push({ kind: 'score', module: 'movement', value: clamp(activityMinsToScore(mins)), source, note: `${mins / 60}h activity` });
+  } else if (actMin) {
+    const mNum = Number(actMin[1].match(/\d/) ? actMin[1] : actMin[2]);
+    const mins = isNaN(mNum) ? Number(actMin[2]) : mNum;
+    writes.push({ kind: 'score', module: 'movement', value: clamp(activityMinsToScore(mins)), source, note: `${mins}min activity` });
+  } else if (/(went for a|took a).*(walk|run|ride|jog|hike)/.test(t) || /\b(walked|ran|biked|cycled|jogged|hiked|swam|worked out)\b/.test(t)) {
+    writes.push({ kind: 'score', module: 'movement', value: 7, source, note: 'moved today' });
+  }
+
+  // ── Nutrition (choices, not calories) ──────────────────────────
+  const foodRate = t.match(/(?:food|nutrition|ate|eating)\D{0,12}(\d{1,2})\s*(?:\/\s*10)?/);
+  const chose = /chose|picked|went with|instead of|over (?:the )?/.test(t);
+  if (foodRate) {
+    writes.push({ kind: 'score', module: 'food', value: clamp(Number(foodRate[1])), source, note: 'nutrition check-in' });
+  } else if (chose && GOOD_FOOD.test(t)) {
+    writes.push({ kind: 'score', module: 'food', value: 8, source, note: 'chose a supportive meal' });
+  } else if (GOOD_FOOD.test(t) && !BAD_FOOD.test(t)) {
+    writes.push({ kind: 'score', module: 'food', value: 8, source, note: 'supportive food' });
+  } else if (BAD_FOOD.test(t) && !GOOD_FOOD.test(t)) {
+    writes.push({ kind: 'score', module: 'food', value: 4, source, note: 'off-plan meal' });
+  }
+
+  return writes;
+}
+
 function mockReply(text: string): string {
   const t = text.toLowerCase();
-  if (/(don'?t|stop|no).*(track|count).*(food|bite|calorie)/.test(t)) {
-    return "Done — I'll stop scoring food and drop it from your Pulse. We can bring it back anytime.";
+  const writes = parseWrites(text, 'chat');
+  const modsHit = new Set(writes.filter((w) => w.kind === 'score').map((w) => (w as ScoreWrite).module));
+
+  if (writes.some((w) => w.kind === 'preference')) {
+    return "Done — I'll stop scoring nutrition and drop it from your Pulse. We can bring it back anytime.";
   }
-  if (/food\D{0,12}\d/.test(t)) {
-    return "Got it — logged how food felt today. That's the pattern I care about, not any single meal.";
+  // Acknowledge exactly what moved, and which way — no shame either way.
+  const parts: string[] = [];
+  for (const w of writes) {
+    if (w.kind !== 'score') continue;
+    if (w.module === 'sleep') parts.push(w.value <= 4 ? 'logged the short night — that nudges Sleep down, no guilt' : 'logged solid sleep — that lifts your Sleep');
+    if (w.module === 'movement') parts.push('counted that movement — Move goes up');
+    if (w.module === 'food') parts.push(w.value >= 7 ? 'nice — that supportive choice lifts Nutrition' : 'logged it as an off-plan meal — Nutrition dips a little, tomorrow resets');
   }
-  if (t.includes('walk') || t.includes('move')) {
+  if (parts.length) {
+    return `Got it — ${parts.join(', ')}. Your Pulse updated on Home and You.`;
+  }
+  if (modsHit.size === 0 && (t.includes('walk') || t.includes('move'))) {
     return "Love it. I'll put a 20-min walk on Today. Mornings work best for you — want it before work?";
   }
-  if (t.includes('sleep') || t.includes('bed') || t.includes('tired')) {
+  if (t.includes('bed') || t.includes('tired')) {
     return 'Got it. Winding down by 10:30 is your good-enough. Want a gentle nudge at 10?';
   }
   if (t.includes('derail') || t.includes('scroll')) {

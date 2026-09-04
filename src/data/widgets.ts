@@ -33,7 +33,7 @@ export const WIDGET_META: Record<WidgetId, WidgetMeta> = {
   },
   food: {
     id: 'food',
-    label: 'Food',
+    label: 'Nutrition',
     module: 'food',
     supportsMedium: true,
     description: 'How food felt this week',

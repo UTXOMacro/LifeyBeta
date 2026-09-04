@@ -41,7 +41,12 @@ export function YouScreen() {
       )}
 
       {/* Your Pulse model composition */}
-      <PulseCompositionCard pulse={pulse} parts={parts} careOff={!isOn(modules, 'care')} />
+      <PulseCompositionCard
+        pulse={pulse}
+        parts={parts}
+        careOff={!isOn(modules, 'care')}
+        onHistory={() => navigate('/pulse/history')}
+      />
 
       {/* What Lifey knows */}
       <div className="section-row">
@@ -81,22 +86,23 @@ function PulseCompositionCard({
   pulse,
   parts,
   careOff,
+  onHistory,
 }: {
   pulse: number;
   parts: PulsePart[];
   careOff: boolean;
+  onHistory: () => void;
 }) {
   return (
     <GlassCard className="pulse-model">
       <div className="pulse-model-head">
         <span className="pulse-model-title">Your Pulse model</span>
-        <span className="pulse-model-info" aria-label="About Pulse">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
-            <circle cx="12" cy="12" r="9" />
-            <path d="M12 11v5" strokeLinecap="round" />
-            <circle cx="12" cy="7.6" r="0.9" fill="currentColor" stroke="none" />
+        <button className="pulse-model-history" onClick={onHistory}>
+          History
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 6l6 6-6 6" />
           </svg>
-        </span>
+        </button>
       </div>
 
       <div className="pulse-model-body">

@@ -1,4 +1,4 @@
-import type { ModuleConfig, ModuleId, PulsePart, Score } from '../types';
+import type { ModuleConfig, ModuleId, PulsePart, Score, ScoreSource } from '../types';
 
 // ─────────────────────────────────────────────────────────────
 // Pulse engine — single source of truth for Home + You.
@@ -38,15 +38,18 @@ interface LatestScore {
 
 // Latest score per module (prefers today's, else the most recent entry).
 function latestByModule(scores: Score[], today: string): Map<ModuleId, LatestScore> {
+  // scores are newest-first (new entries are prepended), so the FIRST time we
+  // see a module is its most recent reading. Only replace with a strictly
+  // newer date, so multiple same-day writes keep the latest (first-seen) one.
   const byModule = new Map<ModuleId, LatestScore>();
+  void today;
   for (const s of scores) {
     const cur = byModule.get(s.module);
     if (!cur) {
       byModule.set(s.module, { value: s.value1to10, date: s.date });
       continue;
     }
-    // Prefer today's reading; otherwise keep the newest date.
-    if (s.date === today || s.date > cur.date) {
+    if (s.date > cur.date) {
       byModule.set(s.module, { value: s.value1to10, date: s.date });
     }
   }
@@ -104,4 +107,81 @@ export function pulseValue(
   today = new Date().toISOString().slice(0, 10),
 ): number {
   return computePulse(pulseParts(modules, scores, today));
+}
+
+// ─────────────────────────────────────────────────────────────
+// Pulse History — recompute Pulse for each day in a window using only the
+// scores known up to that day. Each point also lists the entries that landed
+// that day with their input source (chat/moment/grocery/strava/etc).
+// ─────────────────────────────────────────────────────────────
+
+export interface HistoryEntry {
+  module: ModuleId;
+  label: string;
+  value: number;
+  source: ScoreSource;
+  note?: string;
+}
+
+export interface HistoryPoint {
+  date: string; // YYYY-MM-DD
+  value: number; // Pulse that day (0 if nothing known yet)
+  entries: HistoryEntry[]; // signals that landed on this day
+}
+
+function isoMinus(days: number, from = new Date()): string {
+  const d = new Date(from);
+  d.setDate(d.getDate() - days);
+  return d.toISOString().slice(0, 10);
+}
+
+export function pulseHistory(
+  modules: ModuleConfig[],
+  scores: Score[],
+  windowDays: number,
+  today = new Date().toISOString().slice(0, 10),
+): HistoryPoint[] {
+  const labelFor = new Map(modules.map((m) => [m.id, m.label] as const));
+  const points: HistoryPoint[] = [];
+
+  for (let i = windowDays - 1; i >= 0; i--) {
+    const day = isoMinus(i);
+    // Scores known as of `day` (nothing from the future).
+    const known = scores.filter((s) => s.date <= day);
+    const value = computePulse(pulseParts(modules, known, day));
+    const entries: HistoryEntry[] = scores
+      .filter((s) => s.date === day)
+      .map((s) => ({
+        module: s.module,
+        label: labelFor.get(s.module) ?? s.module,
+        value: s.value1to10,
+        source: s.source,
+        note: s.note,
+      }));
+    points.push({ date: day, value, entries });
+  }
+  void today;
+  return points;
+}
+
+// Human label for an input source (Pulse History legend).
+export function sourceLabel(source: ScoreSource): string {
+  switch (source) {
+    case 'chat':
+      return 'Connect chat';
+    case 'moment':
+      return 'Moment';
+    case 'grocery':
+      return 'Grocery order';
+    case 'strava':
+      return 'Strava';
+    case 'device':
+      return 'Device';
+    case 'manual':
+      return 'Manual';
+    case 'inferred':
+      return 'Inferred';
+    default:
+      return source;
+  }
 }

@@ -73,6 +73,17 @@
   color: var(--text-secondary);
   display: inline-flex;
 }
+.pulse-model-history {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mint);
+}
+.pulse-model-history:active {
+  opacity: 0.7;
+}
 .pulse-model-body {
   display: flex;
   align-items: center; /* center the big number against the full row stack */
@@ -347,6 +358,136 @@
 }
 
 /* Privacy segmented control reused .privacy-opts / .priv-opt from screens.css */
+
+/* ── Pulse History ─────────────────────────────────────── */
+.hist-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.hist-tab {
+  flex: 1;
+  padding: 9px 0;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--card-border);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+}
+.hist-tab.active {
+  color: var(--mint);
+  background: var(--mint-dim);
+  border-color: rgba(125, 207, 192, 0.35);
+}
+.hist-summary {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.hist-now {
+  font-size: 44px;
+  font-weight: 300;
+  color: var(--mint);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+.hist-delta {
+  font-size: 14px;
+}
+.hist-delta .up {
+  color: var(--mint);
+}
+.hist-delta .down {
+  color: #e0a86b;
+}
+.hist-chart {
+  padding: 14px 12px 8px;
+  border-radius: 16px;
+}
+.hist-axis {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  margin-top: 6px;
+}
+.hist-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 0 4px;
+}
+.hist-src {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--card-border);
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.03);
+  white-space: nowrap;
+}
+.hist-src.src-strava {
+  color: #ff7a45;
+  border-color: rgba(255, 122, 69, 0.3);
+  background: rgba(255, 122, 69, 0.1);
+}
+.hist-src.src-grocery {
+  color: #f2b45c;
+  border-color: rgba(242, 180, 92, 0.3);
+  background: rgba(242, 180, 92, 0.1);
+}
+.hist-src.src-chat {
+  color: var(--mint);
+  border-color: rgba(125, 207, 192, 0.32);
+  background: var(--mint-dim);
+}
+.hist-src.src-moment {
+  color: #b79cf0;
+  border-color: rgba(183, 156, 240, 0.3);
+  background: rgba(183, 156, 240, 0.1);
+}
+.hist-entries {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.hist-entry {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--card-border);
+  background: var(--card);
+}
+.hist-entry-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.hist-entry-title {
+  font-size: 14px;
+  color: var(--text-primary);
+}
+.hist-entry-note {
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hist-entry-date {
+  font-size: 12px;
+  flex: none;
+}
+.hist-empty {
+  padding: 20px 8px;
+  text-align: center;
+  font-size: 14px;
+}
 
 /* ── Integrations ───────────────────────────────────────── */
 .integration-list {

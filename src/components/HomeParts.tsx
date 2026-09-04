@@ -81,7 +81,20 @@ export function PulseCard({ onOpenConnect }: { onOpenConnect: (seed?: string) =>
       <div className="pulse-ring-wrap">
         <PulseRing value={pulse} size={132} />
       </div>
-      <div className="pulse-label">Pulse</div>
+      <div className="pulse-label-row">
+        <span className="pulse-label">Pulse</span>
+        <span
+          className="pulse-history-link"
+          role="button"
+          tabIndex={0}
+          onClick={(e) => {
+            e.stopPropagation();
+            navigate('/pulse/history');
+          }}
+        >
+          See more
+        </span>
+      </div>
       <div className="pulse-value">{pulse.toFixed(1)}</div>
       <div className="pulse-chips">
         {active.map((m) => (

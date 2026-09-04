@@ -9,6 +9,7 @@ import { ModulesSettings } from './screens/settings/ModulesSettings';
 import { IntegrationsSettings } from './screens/settings/IntegrationsSettings';
 import { EvidenceSettings } from './screens/settings/EvidenceSettings';
 import { PrivacySettings } from './screens/settings/PrivacySettings';
+import { PulseHistoryScreen } from './screens/PulseHistoryScreen';
 import { CaptureSheet } from './screens/CaptureSheet';
 
 export default function App() {
@@ -40,6 +41,7 @@ export default function App() {
         <Route path="/settings/integrations" element={<IntegrationsSettings />} />
         <Route path="/settings/evidence" element={<EvidenceSettings />} />
         <Route path="/settings/privacy" element={<PrivacySettings />} />
+        <Route path="/pulse/history" element={<PulseHistoryScreen />} />
       </Routes>
 
       <CaptureSheet open={captureOpen} onClose={() => setCaptureOpen(false)} />

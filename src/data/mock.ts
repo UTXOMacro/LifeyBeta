@@ -1,6 +1,6 @@
 import type {
   Belief,
-  ChatMessage,
+  Conversation,
   EvidenceCard,
   FriendEdge,
   Integration,
@@ -58,7 +58,7 @@ export const defaultModules: ModuleConfig[] = [
   },
   {
     id: 'food',
-    label: 'Food',
+    label: 'Nutrition',
     enabled: true,
     weight: 0.2,
     description: 'Eating pattern vs your goal, not one meal',
@@ -140,6 +140,27 @@ export const mockScores: Score[] = [
   { module: 'routines', date: dayOffset(0), source: 'manual', value1to10: 6, note: 'most of today' },
   { module: 'routines', date: dayOffset(1), source: 'manual', value1to10: 7 },
   { module: 'routines', date: dayOffset(2), source: 'manual', value1to10: 5 },
+
+  // Deeper backfill (days 7–30) with varied INPUT SOURCES so Pulse History
+  // shows how each reading arrived: Strava, grocery orders, moments, chat.
+  { module: 'movement', date: dayOffset(8), source: 'strava', value1to10: 9, note: '1h bike ride' },
+  { module: 'movement', date: dayOffset(11), source: 'strava', value1to10: 8, note: '45min run' },
+  { module: 'movement', date: dayOffset(15), source: 'strava', value1to10: 7, note: '30min walk' },
+  { module: 'movement', date: dayOffset(21), source: 'strava', value1to10: 8, note: '5k run' },
+  { module: 'movement', date: dayOffset(28), source: 'strava', value1to10: 6, note: 'easy ride' },
+  { module: 'food', date: dayOffset(9), source: 'grocery', value1to10: 8, note: 'stocked veggies + fish' },
+  { module: 'food', date: dayOffset(14), source: 'grocery', value1to10: 7, note: 'mostly whole foods order' },
+  { module: 'food', date: dayOffset(20), source: 'moment', value1to10: 8, note: 'chose chicken + rice over burgers' },
+  { module: 'food', date: dayOffset(26), source: 'grocery', value1to10: 6, note: 'mixed order' },
+  { module: 'sleep', date: dayOffset(10), source: 'device', value1to10: 5, note: '5h 40m' },
+  { module: 'sleep', date: dayOffset(13), source: 'chat', value1to10: 3, note: 'slept 4 hours' },
+  { module: 'sleep', date: dayOffset(18), source: 'device', value1to10: 8, note: '7h 50m' },
+  { module: 'sleep', date: dayOffset(24), source: 'device', value1to10: 7, note: '7h 05m' },
+  { module: 'sleep', date: dayOffset(29), source: 'device', value1to10: 6, note: '6h 30m' },
+  { module: 'mindset', date: dayOffset(12), source: 'moment', value1to10: 8, note: 'good headspace' },
+  { module: 'mindset', date: dayOffset(19), source: 'chat', value1to10: 6 },
+  { module: 'routines', date: dayOffset(16), source: 'manual', value1to10: 7 },
+  { module: 'routines', date: dayOffset(23), source: 'manual', value1to10: 6 },
 ];
 
 export const mockQuantities: Quantity[] = [
@@ -184,12 +205,64 @@ export const mockContext: LifeContext = {
   goodEnough: 'A walk and lights out by 11 counts as a win.',
 };
 
-export const mockThread: ChatMessage[] = [
+// ── Connect conversations (multiple, ChatGPT-style) ──────
+// All chats feed the same long-term profile memory. These seeds show the
+// list feel and demonstrate cross-chat context (sleep, food, travel).
+const HOUR = 1000 * 60 * 60;
+export const mockConversations: Conversation[] = [
   {
-    id: 'm1',
-    role: 'lifey',
-    text: "Hey Ryan. Good week so far — sleep's been steady. Want to lock in tomorrow's walk?",
-    ts: Date.now() - 1000 * 60 * 60 * 3,
+    id: 'c-today',
+    title: 'Tomorrow’s walk',
+    createdAt: Date.now() - 3 * HOUR,
+    updatedAt: Date.now() - 3 * HOUR,
+    messages: [
+      {
+        id: 'm1',
+        role: 'lifey',
+        text: "Hey Ryan. Good week so far — sleep's been steady. Want to lock in tomorrow's walk?",
+        ts: Date.now() - 3 * HOUR,
+      },
+    ],
+  },
+  {
+    id: 'c-food',
+    title: 'How I want to eat',
+    createdAt: Date.now() - 26 * HOUR,
+    updatedAt: Date.now() - 25 * HOUR,
+    messages: [
+      {
+        id: 'm2',
+        role: 'user',
+        text: "I don't want to count every calorie. Just eat a bit better most days.",
+        ts: Date.now() - 26 * HOUR,
+      },
+      {
+        id: 'm3',
+        role: 'lifey',
+        text: "That's the healthy way to think about it. I'll track the pattern, not the bites — and I'll remember that across our chats.",
+        ts: Date.now() - 25 * HOUR,
+      },
+    ],
+  },
+  {
+    id: 'c-travel',
+    title: 'Travel week plan',
+    createdAt: Date.now() - 3 * 24 * HOUR,
+    updatedAt: Date.now() - 3 * 24 * HOUR,
+    messages: [
+      {
+        id: 'm4',
+        role: 'user',
+        text: "I'm traveling next week for work — don't judge me if I miss workouts.",
+        ts: Date.now() - 3 * 24 * HOUR,
+      },
+      {
+        id: 'm5',
+        role: 'lifey',
+        text: "Noted for good. Travel weeks won't count against your Pulse. We'll aim for a walk when you can and pick the plan back up after.",
+        ts: Date.now() - 3 * 24 * HOUR + 60000,
+      },
+    ],
   },
 ];
 
@@ -230,7 +303,7 @@ export const mockIntegrations: Integration[] = [
   {
     id: 'amazon',
     name: 'Amazon',
-    informs: 'Grocery + household orders inform Food and Care',
+    informs: 'Grocery + household orders inform Nutrition and Care',
     modules: ['food', 'care'],
     connected: false,
     available: true,
@@ -254,7 +327,7 @@ export const mockIntegrations: Integration[] = [
   {
     id: 'myfitnesspal',
     name: 'MyFitnessPal',
-    informs: 'Eating patterns inform Food (pattern, not calories)',
+    informs: 'Eating patterns inform Nutrition (pattern, not calories)',
     modules: ['food'],
     connected: false,
     available: false,
@@ -262,7 +335,7 @@ export const mockIntegrations: Integration[] = [
   {
     id: 'instacart',
     name: 'Instacart',
-    informs: 'Grocery orders inform Food and Care',
+    informs: 'Grocery orders inform Nutrition and Care',
     modules: ['food', 'care'],
     connected: false,
     available: false,
@@ -309,7 +382,7 @@ export const mockEvidence: EvidenceCard[] = [
     source: 'Dietary pattern reviews',
     year: 2019,
     howLifeyUses:
-      'Food reflects how the week supports your goal — not a calorie count, and never an “organic = 10” halo.',
+      'Nutrition reflects how the week supports your goal — not a calorie count, and never an “organic = 10” halo.',
     connectHint: 'What does eating well look like for you this week?',
   },
   {
