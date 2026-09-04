@@ -1,0 +1,293 @@
+/* ─────────────────────────────────────────────────────────────
+   Home — matches Lifey-Home-01. Uses tokens from theme.css only.
+   ───────────────────────────────────────────────────────────── */
+
+.home {
+  padding-top: 14px;
+}
+
+/* ── 1. Header ──────────────────────────────────────────── */
+.home-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0 22px;
+}
+.home-avatar-btn {
+  display: inline-flex;
+}
+.greeting {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  line-height: 1.15;
+}
+.greeting-caption {
+  font-size: var(--t-caption);
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+.greeting-name {
+  font-size: var(--t-name);
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--text-primary);
+}
+
+/* ── 2. Lifey Now card ──────────────────────────────────── */
+.now-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  width: 100%;
+  text-align: left;
+  padding: 18px 18px 16px 22px;
+  overflow: hidden;
+}
+.now-hairline {
+  position: absolute;
+  left: 0;
+  top: 12px;
+  bottom: 12px;
+  width: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--hairline);
+  box-shadow: 0 0 12px rgba(125, 207, 192, 0.5);
+}
+.now-lead {
+  font-size: var(--t-body);
+  color: var(--text-primary);
+  font-weight: 500;
+}
+.now-follow {
+  font-size: var(--t-body);
+  color: var(--text-secondary);
+}
+.now-ask {
+  margin-top: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--mint);
+}
+.now-arrow {
+  font-weight: 500;
+}
+
+/* ── 3. Pulse card (hero) ───────────────────────────────── */
+.pulse-card {
+  position: relative;
+  display: block;
+  width: 100%;
+  text-align: left;
+  margin-top: 14px;
+  padding: 22px 22px 20px;
+  overflow: hidden;
+  background: linear-gradient(160deg, var(--mint-wash), transparent 55%), var(--card);
+}
+.pulse-ring-wrap {
+  position: absolute;
+  top: 50%;
+  right: 22px;
+  transform: translateY(-50%);
+  opacity: 0.95;
+  pointer-events: none;
+}
+.pulse-label {
+  font-size: var(--t-section);
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+.pulse-value {
+  font-size: 64px;
+  line-height: 1;
+  font-weight: 300;
+  color: var(--mint);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  margin: 8px 0 20px;
+}
+.pulse-chips {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 7px;
+  position: relative;
+  z-index: 1;
+  max-width: 62%;
+}
+
+/* ── 4. Two-up metric tiles ─────────────────────────────── */
+.tiles-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+.metric-tile {
+  display: block;
+  text-align: left;
+  padding: 16px 16px 12px;
+  min-height: 128px;
+  position: relative;
+  overflow: hidden;
+}
+.tile-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--mint);
+}
+.tile-icon {
+  display: inline-flex;
+  width: 30px;
+  height: 30px;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-pill);
+  background: var(--mint-dim);
+  color: var(--mint);
+}
+.tile-label {
+  font-size: var(--t-tile-label);
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+.tile-value {
+  font-size: var(--t-tile-metric);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-top: 10px;
+  letter-spacing: -0.01em;
+}
+.tile-subtitle {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+.tile-spark {
+  margin-top: 8px;
+}
+
+/* ── 5. Week strip (on canvas) ──────────────────────────── */
+.week-strip {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 22px 8px 18px;
+}
+.week-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.week-letter {
+  font-size: 14px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.week-day.active .week-letter {
+  color: var(--mint);
+  font-weight: 600;
+}
+.week-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.14);
+}
+.week-dot.filled {
+  background: var(--text-secondary);
+}
+.week-day.active .week-dot {
+  background: var(--mint);
+  box-shadow: 0 0 8px rgba(125, 207, 192, 0.6);
+}
+
+/* ── 6. Today (single Done) ─────────────────────────────── */
+.today-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.task-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  text-align: left;
+  padding: 14px 14px 14px 16px;
+}
+.task-check {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-pill);
+  border: 1.6px solid var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.task-check.done {
+  background: var(--mint);
+  border-color: var(--mint);
+}
+.task-title {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--t-body);
+  color: var(--text-primary);
+}
+.task-done {
+  flex: none;
+  background: var(--mint);
+  color: #06110e;
+  font-weight: 600;
+  font-size: 13px;
+  border-radius: var(--radius-pill);
+  padding: 8px 18px;
+  line-height: 1;
+}
+.task-done:active {
+  filter: brightness(0.94);
+}
+.task-done.is-done {
+  background: var(--mint-dim);
+  color: var(--mint);
+}
+
+/* ── 7. Friends peek ────────────────────────────────────── */
+.friends-peek {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+}
+.friend-lead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.friend-lead-name {
+  font-size: var(--t-body);
+  color: var(--text-primary);
+  font-weight: 500;
+}
+.friend-rest {
+  display: flex;
+  align-items: center;
+}
+.friend-rest-avatar {
+  margin-left: -10px;
+}
+.friend-rest-avatar:first-child {
+  margin-left: 4px;
+}

@@ -1,0 +1,63 @@
+/* ─────────────────────────────────────────────────────────────
+   Floating frosted tab bar with a raised mint Capture +.
+   ───────────────────────────────────────────────────────────── */
+
+.tab-bar {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 22px;
+  width: min(calc(var(--max-w) - 40px), calc(100vw - 40px));
+  height: 62px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 10px;
+  z-index: 20;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+}
+
+.tab-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  flex: 1;
+  text-decoration: none;
+  color: var(--icon-inactive);
+}
+.tab-icon {
+  color: var(--icon-inactive);
+}
+.tab-icon.active {
+  color: var(--mint);
+}
+.tab-label {
+  font-size: var(--t-tab);
+  font-weight: 500;
+  color: var(--icon-inactive);
+}
+.tab-item.active .tab-label,
+.tab-item[aria-current='page'] .tab-label {
+  color: var(--mint);
+}
+
+/* Center + — raised, overlapping the bar */
+.tab-capture {
+  flex: none;
+  width: 56px;
+  height: 56px;
+  margin: 0 6px;
+  border-radius: var(--radius-pill);
+  background: var(--mint);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateY(-16px);
+  box-shadow: 0 6px 20px rgba(125, 207, 192, 0.4);
+}
+.tab-capture:active {
+  filter: brightness(0.95);
+}
