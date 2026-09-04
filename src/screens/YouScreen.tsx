@@ -1,76 +1,171 @@
+import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
-import { initials } from '../lib/score';
-import { Avatar, GlassCard } from '../components/ui';
-import type { Visibility } from '../types';
+import { Avatar, ChevronRow, GlassCard, ModuleChip } from '../components/ui';
+import type { Belief, PulsePart } from '../types';
 
-const PRIVACY_OPTS: { id: Visibility; label: string }[] = [
-  { id: 'me', label: 'Only me' },
-  { id: 'friends', label: 'Friends' },
-  { id: 'everyone', label: 'Everyone' },
-];
-
-// You — identity glass card, module rows with switches, links. No Pulse hero.
+// You — "Your Pulse model": identity + why Pulse is this number for this
+// person + entry to settings. Not a second Home; switches/privacy live in
+// pushed Settings screens.
 export function YouScreen() {
+  const navigate = useNavigate();
   const profile = useStore((s) => s.profile);
   const modules = useStore((s) => s.modules);
-  const toggleModule = useStore((s) => s.toggleModule);
+  const beliefs = useStore((s) => s.beliefs);
+  const friendsCount = useStore((s) => s.friendsCount);
+  const pulse = useStore((s) => s.pulse)();
+  const parts = useStore((s) => s.pulseParts)();
+
+  const highlightChips = modules.filter((m) => m.enabled && m.showOnProfile);
 
   return (
-    <div className="screen">
-      <h1 className="screen-title">You</h1>
+    <div className="screen you-screen">
+      <h1 className="screen-title serif">You</h1>
 
-      {/* Identity card */}
-      <GlassCard className="you-profile">
-        <Avatar label={initials(profile.displayName)} size={56} />
-        <div className="you-id">
-          <div className="you-name">{profile.displayName}</div>
-          <div className="you-living faint">{profile.howImLiving}</div>
+      {/* Identity */}
+      <div className="you-identity">
+        <Avatar label={profile.displayName[0]} src={profile.photo} size={116} />
+        <div className="you-name-lg">{profile.displayName}</div>
+        <div className="you-bio">{profile.howImLiving}</div>
+        <div className="you-friends">
+          <FriendsGlyph /> {friendsCount} friends
         </div>
-      </GlassCard>
-
-      {/* Module rows — off = hidden from picker, Pulse, Home */}
-      <div className="section-row">
-        <span className="section-label">Modules</span>
       </div>
-      <div className="module-list">
-        {modules.map((m) => (
-          <GlassCard key={m.id} className="module-row">
-            <span className="module-name">{m.label}</span>
-            <button
-              className={`switch ${m.enabled ? 'on' : ''}`}
-              onClick={() => toggleModule(m.id)}
-              aria-label={`Toggle ${m.label}`}
-            >
-              <span className="knob" />
-            </button>
-          </GlassCard>
+
+      {/* Highlight chips (not switches) */}
+      {highlightChips.length > 0 && (
+        <div className="you-chips">
+          {highlightChips.map((m) => (
+            <ModuleChip key={m.id}>{m.label}</ModuleChip>
+          ))}
+        </div>
+      )}
+
+      {/* Your Pulse model composition */}
+      <PulseCompositionCard pulse={pulse} parts={parts} careOff={!isOn(modules, 'care')} />
+
+      {/* What Lifey knows */}
+      <div className="section-row">
+        <span className="section-label lg">What Lifey knows</span>
+      </div>
+      <div className="knows-grid">
+        {beliefs.slice(0, 4).map((b) => (
+          <LifeContextCard key={b.id} belief={b} />
         ))}
       </div>
-      <p className="module-hint faint">
-        Off modules disappear from your picker, Pulse, and Home. Turn one on to see its tile.
-      </p>
 
-      {/* Links */}
-      <div className="you-links">
-        <GlassCard className="you-link">Edit Home</GlassCard>
-        <GlassCard className="you-link">Privacy</GlassCard>
-      </div>
-
-      {/* Privacy default */}
+      {/* Moments — empty state */}
       <div className="section-row">
-        <span className="section-label">Privacy default</span>
+        <span className="section-label lg">Moments</span>
       </div>
-      <div className="privacy-opts">
-        {PRIVACY_OPTS.map((o) => (
-          <div key={o.id} className={`priv-opt ${profile.privacyDefault === o.id ? 'active' : ''}`}>
-            {o.label}
-          </div>
-        ))}
+      <GlassCard className="moments-empty">Share a walk or a win</GlassCard>
+
+      {/* Chevron settings rows */}
+      <div className="settings-list">
+        <ChevronRow icon={<GridIcon />} label="Modules" onClick={() => navigate('/settings/modules')} />
+        <ChevronRow icon={<DocIcon />} label="Evidence & sources" onClick={() => navigate('/settings/evidence')} />
+        <ChevronRow icon={<ShieldIcon />} label="Privacy" onClick={() => navigate('/settings/privacy')} />
+        <ChevronRow icon={<EditIcon />} label="Edit Home" onClick={() => navigate('/')} />
+        <ChevronRow icon={<BellIcon />} label="Notifications" />
       </div>
-      <p className="module-hint faint">
-        Your public profile never shows weight, calories, food logs, raw 1–10s, tasks, or calendar
-        unless you explicitly share a moment.
-      </p>
     </div>
   );
+}
+
+function isOn(modules: ReturnType<typeof useStore.getState>['modules'], id: string) {
+  return !!modules.find((m) => m.id === id)?.enabled;
+}
+
+// ── Pulse composition card ──────────────────────────────
+function PulseCompositionCard({
+  pulse,
+  parts,
+  careOff,
+}: {
+  pulse: number;
+  parts: PulsePart[];
+  careOff: boolean;
+}) {
+  return (
+    <GlassCard className="pulse-model">
+      <div className="pulse-model-head">
+        <span className="pulse-model-title">Your Pulse model</span>
+        <span className="pulse-model-info" aria-label="About Pulse">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 11v5" strokeLinecap="round" />
+            <circle cx="12" cy="7.6" r="0.9" fill="currentColor" stroke="none" />
+          </svg>
+        </span>
+      </div>
+
+      <div className="pulse-model-body">
+        <div className="pulse-model-number">{pulse.toFixed(1)}</div>
+        <div className="pulse-model-rows">
+          {parts.map((p) => (
+            <div key={p.module} className="pulse-model-row">
+              <span className="pmr-name">{p.label}</span>
+              <span className="pmr-value">{p.score ?? '—'}</span>
+              <span className="pmr-weight">{Math.round(p.weight * 100)}%</span>
+            </div>
+          ))}
+          {careOff && (
+            <div className="pulse-model-row care-off">
+              <span className="pmr-name">Care</span>
+              <span className="pmr-off">off</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <p className="pulse-model-caption">
+        Pulse estimates how supported today looks. Not a diagnosis.
+      </p>
+    </GlassCard>
+  );
+}
+
+// ── What Lifey knows card ───────────────────────────────
+function LifeContextCard({ belief }: { belief: Belief }) {
+  const dismiss = useStore((s) => s.dismissBelief);
+  return (
+    <button className="knows-card glass" onClick={() => dismiss(belief.id)}>
+      <span className="knows-text">{belief.text}</span>
+      <span className="knows-icon">{beliefIcon(belief.icon)}</span>
+    </button>
+  );
+}
+
+function beliefIcon(kind?: Belief['icon']) {
+  const p = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.7, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
+  switch (kind) {
+    case 'moon':
+      return <svg width="18" height="18" viewBox="0 0 24 24" {...p}><path d="M20 14.5A8 8 0 1 1 9.5 4a6.4 6.4 0 0 0 10.5 10.5z" /></svg>;
+    case 'leaf':
+      return <svg width="18" height="18" viewBox="0 0 24 24" {...p}><path d="M5 19c9 0 14-5 14-14-9 0-14 5-14 14z" /><path d="M5 19c3-6 7-8 10-9" /></svg>;
+    case 'clock':
+      return <svg width="18" height="18" viewBox="0 0 24 24" {...p}><circle cx="12" cy="12" r="8.5" /><path d="M12 8v4l3 2" /></svg>;
+    default:
+      return <svg width="18" height="18" viewBox="0 0 24 24" {...p}><path d="M12 3v4M12 17v4M3 12h4M17 12h4" /><circle cx="12" cy="12" r="2.4" /></svg>;
+  }
+}
+
+// ── Inline icons ────────────────────────────────────────
+const ic = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.7, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
+function FriendsGlyph() {
+  return <svg className="friends-glyph" width="16" height="16" viewBox="0 0 24 24" {...ic}><circle cx="9" cy="8" r="3" /><path d="M3.5 19a5.5 5.5 0 0 1 11 0" /><path d="M16 5.4a3 3 0 0 1 0 5.2M17.5 19a5.5 5.5 0 0 0-2-4.2" /></svg>;
+}
+function GridIcon() {
+  return <svg width="20" height="20" viewBox="0 0 24 24" {...ic}><rect x="4" y="4" width="7" height="7" rx="1.5" /><rect x="13" y="4" width="7" height="7" rx="1.5" /><rect x="4" y="13" width="7" height="7" rx="1.5" /><rect x="13" y="13" width="7" height="7" rx="1.5" /></svg>;
+}
+function DocIcon() {
+  return <svg width="20" height="20" viewBox="0 0 24 24" {...ic}><path d="M7 3h7l4 4v14H7z" /><path d="M14 3v4h4M9.5 12h6M9.5 15.5h6" /></svg>;
+}
+function ShieldIcon() {
+  return <svg width="20" height="20" viewBox="0 0 24 24" {...ic}><path d="M12 3l7 3v5c0 5-3.5 8-7 9-3.5-1-7-4-7-9V6z" /><path d="M9 12l2 2 4-4" /></svg>;
+}
+function EditIcon() {
+  return <svg width="20" height="20" viewBox="0 0 24 24" {...ic}><path d="M4 20h4l10-10-4-4L4 16z" /><path d="M13.5 6.5l4 4" /></svg>;
+}
+function BellIcon() {
+  return <svg width="20" height="20" viewBox="0 0 24 24" {...ic}><path d="M6 9a6 6 0 1 1 12 0c0 5 2 6 2 6H4s2-1 2-6" /><path d="M10 20a2 2 0 0 0 4 0" /></svg>;
 }

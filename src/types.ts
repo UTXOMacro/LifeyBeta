@@ -3,7 +3,14 @@
 // Implemented now even where UI is thin, so mock data swaps to APIs cleanly.
 // ─────────────────────────────────────────────────────────────
 
-export type ModuleId = 'sleep' | 'movement' | 'food' | 'mindset' | 'routines' | 'social';
+export type ModuleId =
+  | 'sleep'
+  | 'movement'
+  | 'food'
+  | 'mindset'
+  | 'routines'
+  | 'social'
+  | 'care';
 
 export type Visibility = 'me' | 'friends' | 'everyone';
 
@@ -28,6 +35,30 @@ export interface ModuleConfig {
   label: string;
   /** whether the user has opted into this module */
   enabled: boolean;
+  /** default Pulse weight when enabled (renormalized across enabled modules) */
+  weight: number;
+  /** one-line description shown in Settings → Modules */
+  description: string;
+  /** surface as a (non-switch) highlight chip on the public You profile */
+  showOnProfile: boolean;
+}
+
+// One weighted input in the Pulse composition (shown on the You card).
+export interface PulsePart {
+  module: ModuleId;
+  label: string;
+  /** latest 1–10 for this module (undefined when no signal) */
+  score?: number;
+  /** 0–1 confidence; shrinks when data is stale */
+  confidence: number;
+  /** renormalized weight across enabled modules, as a fraction 0–1 */
+  weight: number;
+}
+
+export interface PulseSnapshot {
+  date: string;
+  value: number;
+  parts: PulsePart[];
 }
 
 export interface WidgetInstance {
@@ -88,6 +119,44 @@ export interface LifeContext {
   scheduleHints: string[];
   derailers: string[];
   goodEnough: string;
+}
+
+// A pinned thing Lifey knows about you (shown in “What Lifey knows”).
+export interface Belief {
+  id: string;
+  text: string;
+  icon?: 'moon' | 'leaf' | 'spark' | 'clock';
+  pinned: boolean;
+}
+
+// Preference written by Connect/Capture, e.g. trackFood=false.
+export interface Preference {
+  key: string;
+  value: string | number | boolean;
+}
+
+// A single opted-in signal that feeds the model.
+export interface Signal {
+  id: string;
+  module: ModuleId;
+  date: string;
+  score?: number; // 1–10
+  quantity?: Quantity;
+  note?: string;
+  source: 'chat' | 'capture' | 'device';
+}
+
+export type EvidenceGrade = 'strong' | 'moderate' | 'emerging' | 'preference';
+
+export interface EvidenceCard {
+  id: string;
+  claim: string; // one plain-language sentence
+  grade: EvidenceGrade;
+  modules: ModuleId[];
+  source: string;
+  year: number;
+  howLifeyUses: string; // how it changes a 1–10 or a weight
+  connectHint?: string;
 }
 
 export interface ChatMessage {

@@ -1,9 +1,12 @@
 import type {
+  Belief,
   ChatMessage,
+  EvidenceCard,
   FriendEdge,
   LifeContext,
   ModuleConfig,
   Post,
+  Preference,
   Profile,
   Quantity,
   Score,
@@ -30,16 +33,68 @@ export const mockProfile: Profile = {
   privacyDefault: 'friends',
 };
 
-// ── Modules (Sleep + Movement on by default per brief) ───
-// Reference frame (Lifey-Home-01) shows four active modules in Pulse:
-// Sleep, Move, Food, Mindset. Product rule intact: Pulse = active only.
+// ── Modules ──────────────────────────────────────────────
+// Each carries a default Pulse weight (renormalized across enabled
+// modules by the engine). Off modules have weight 0 in practice —
+// they're excluded from Home tiles, chips, and Pulse composition.
+// Care defaults OFF and reflects preferences, not medical risk.
 export const defaultModules: ModuleConfig[] = [
-  { id: 'sleep', label: 'Sleep', enabled: true },
-  { id: 'movement', label: 'Move', enabled: true },
-  { id: 'food', label: 'Food', enabled: true },
-  { id: 'mindset', label: 'Mindset', enabled: true },
-  { id: 'routines', label: 'Routines', enabled: false },
-  { id: 'social', label: 'Social', enabled: false },
+  {
+    id: 'sleep',
+    label: 'Sleep',
+    enabled: true,
+    weight: 0.35,
+    description: 'Quality + consistency vs your baseline',
+    showOnProfile: true,
+  },
+  {
+    id: 'movement',
+    label: 'Move',
+    enabled: true,
+    weight: 0.25,
+    description: 'Activity vs your plan',
+    showOnProfile: true,
+  },
+  {
+    id: 'food',
+    label: 'Food',
+    enabled: true,
+    weight: 0.2,
+    description: 'Eating pattern vs your goal, not one meal',
+    showOnProfile: true,
+  },
+  {
+    id: 'mindset',
+    label: 'Mindset',
+    enabled: true,
+    weight: 0.1,
+    description: 'Optional momentum',
+    showOnProfile: true,
+  },
+  {
+    id: 'routines',
+    label: 'Tasks',
+    enabled: true,
+    weight: 0.1,
+    description: 'Planned vs done given your time',
+    showOnProfile: false,
+  },
+  {
+    id: 'social',
+    label: 'Social',
+    enabled: false,
+    weight: 0.1,
+    description: 'Staying in touch with your people',
+    showOnProfile: false,
+  },
+  {
+    id: 'care',
+    label: 'Care',
+    enabled: false,
+    weight: 0,
+    description: 'Optional — reflects your preferences, not medical risk',
+    showOnProfile: false,
+  },
 ];
 
 // ── Default Home layout (Sleep + Movement enabled) ───────
@@ -81,6 +136,9 @@ export const mockScores: Score[] = [
   { module: 'mindset', date: dayOffset(0), source: 'manual', value1to10: 8, note: 'clear head' },
   { module: 'mindset', date: dayOffset(1), source: 'manual', value1to10: 7 },
   { module: 'mindset', date: dayOffset(2), source: 'manual', value1to10: 8 },
+  { module: 'routines', date: dayOffset(0), source: 'manual', value1to10: 6, note: 'most of today' },
+  { module: 'routines', date: dayOffset(1), source: 'manual', value1to10: 7 },
+  { module: 'routines', date: dayOffset(2), source: 'manual', value1to10: 5 },
 ];
 
 export const mockQuantities: Quantity[] = [
@@ -131,5 +189,66 @@ export const mockThread: ChatMessage[] = [
     role: 'lifey',
     text: "Hey Ryan. Good week so far — sleep's been steady. Want to lock in tomorrow's walk?",
     ts: Date.now() - 1000 * 60 * 60 * 3,
+  },
+];
+
+// ── What Lifey knows (pinned beliefs, editable/dismissable) ─
+export const mockBeliefs: Belief[] = [
+  { id: 'b1', text: 'Sleep before 11', icon: 'moon', pinned: true },
+  { id: 'b2', text: "Don't count every bite", icon: 'leaf', pinned: true },
+  { id: 'b3', text: 'Mornings work best', icon: 'spark', pinned: true },
+  { id: 'b4', text: 'A walk still counts', icon: 'clock', pinned: true },
+];
+
+// ── Preferences written by Connect/Capture ────────────
+export const mockPreferences: Preference[] = [
+  { key: 'trackFood', value: true },
+  { key: 'prefersMornings', value: true },
+];
+
+// ── Evidence & sources (plain-language, no disease claims) ─
+export const mockEvidence: EvidenceCard[] = [
+  {
+    id: 'ev-sleep-consistency',
+    claim: 'More regular sleep timing is linked to steadier next-day energy and appetite.',
+    grade: 'moderate',
+    modules: ['sleep'],
+    source: 'Sleep health reviews',
+    year: 2023,
+    howLifeyUses:
+      'If bedtime drifts more than ~90 minutes from your usual, we lower sleep consistency — we do not crash Pulse.',
+    connectHint: 'What time do you usually wind down?',
+  },
+  {
+    id: 'ev-move-regular',
+    claim: 'Regular light activity is associated with steadier mood and energy across the day.',
+    grade: 'strong',
+    modules: ['movement'],
+    source: 'Physical activity guidelines',
+    year: 2020,
+    howLifeyUses:
+      'Meeting your own movement plan nudges Move up; a rest day you planned does not count against you.',
+    connectHint: 'What does a realistic movement week look like for you?',
+  },
+  {
+    id: 'ev-food-pattern',
+    claim: 'Overall eating patterns matter more for how you feel than any single meal.',
+    grade: 'moderate',
+    modules: ['food'],
+    source: 'Dietary pattern reviews',
+    year: 2019,
+    howLifeyUses:
+      'Food reflects how the week supports your goal — not a calorie count, and never an “organic = 10” halo.',
+    connectHint: 'What does eating well look like for you this week?',
+  },
+  {
+    id: 'ev-tasks-context',
+    claim: 'Matching plans to the time you actually have supports follow-through.',
+    grade: 'emerging',
+    modules: ['routines'],
+    source: 'Behavior-change literature',
+    year: 2021,
+    howLifeyUses:
+      'Tasks compares done vs planned for today. A busy or travel day from Connect removes any penalty.',
   },
 ];

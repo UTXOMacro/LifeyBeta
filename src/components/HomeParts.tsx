@@ -73,8 +73,11 @@ export function PulseCard({ onOpenConnect }: { onOpenConnect: (seed?: string) =>
   const pulse = useStore((s) => s.pulse)();
   const active = useStore((s) => s.modules).filter((m) => m.enabled);
 
+  const navigate = useNavigate();
+  // Pulse tap → the You composition card (one source of truth).
+  void onOpenConnect;
   return (
-    <GlassCard className="pulse-card" onClick={() => onOpenConnect('Break down my Pulse for me.')}>
+    <GlassCard className="pulse-card" onClick={() => navigate('/you')}>
       <div className="pulse-ring-wrap">
         <PulseRing value={pulse} size={132} />
       </div>
@@ -272,11 +275,12 @@ function BellIcon() {
     </svg>
   );
 }
+// Settings sprocket — a proper cog (toothed gear), not a sun.
 function GearIcon() {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" {...svgProps}>
-      <circle cx="12" cy="12" r="3.2" />
-      <path d="M12 2.5v2.4M12 19.1v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7" />
+      <circle cx="12" cy="12" r="3.1" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1.08 1.65 1.65 0 0 0-.33-1.82l-.06-.06A2 2 0 1 1 7.04 4.2l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
     </svg>
   );
 }

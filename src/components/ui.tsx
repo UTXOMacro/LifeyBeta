@@ -124,6 +124,29 @@ export function ModuleChip({ children }: { children: ReactNode }) {
   return <span className="module-chip">{children}</span>;
 }
 
+/** ChevronRow — leading icon · label · trailing chevron. Pushes a screen. */
+export function ChevronRow({
+  icon,
+  label,
+  onClick,
+}: {
+  icon: ReactNode;
+  label: string;
+  onClick?: () => void;
+}) {
+  return (
+    <button className="chevron-row" onClick={onClick}>
+      <span className="chevron-icon">{icon}</span>
+      <span className="chevron-label">{label}</span>
+      <span className="chevron-caret">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M9 6l6 6-6 6" />
+        </svg>
+      </span>
+    </button>
+  );
+}
+
 /** PulseRing — full thin track ring with a mint gradient that is bright at the
  *  top/upper-right and fades clockwise toward the lower-left (matches ref). */
 export function PulseRing({ size = 132 }: { value?: number; max?: number; size?: number }) {

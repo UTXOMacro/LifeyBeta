@@ -1,10 +1,14 @@
 import { create } from 'zustand';
 import type {
+  Belief,
   ChatMessage,
+  EvidenceCard,
   LifeContext,
   ModuleConfig,
   ModuleId,
+  Preference,
   Profile,
+  PulsePart,
   Score,
   Task,
   TaskStatus,
@@ -13,10 +17,14 @@ import type {
   WidgetSize,
 } from './types';
 import { WIDGET_META } from './data/widgets';
+import { computePulse, pulseParts } from './lib/pulse';
 import {
   defaultLayout,
   defaultModules,
+  mockBeliefs,
   mockContext,
+  mockEvidence,
+  mockPreferences,
   mockProfile,
   mockScores,
   mockTasks,
@@ -33,10 +41,15 @@ interface LifeyState {
   week: boolean[];
   thread: ChatMessage[];
   context: LifeContext;
+  beliefs: Belief[];
+  preferences: Preference[];
+  evidence: EvidenceCard[];
+  friendsCount: number;
 
   // module toggles
   toggleModule: (id: ModuleId) => void;
   isModuleOn: (id: ModuleId) => boolean;
+  toggleShowOnProfile: (id: ModuleId) => void;
 
   // widget layout ops
   addWidget: (widget: WidgetId, size?: WidgetSize) => void;
@@ -47,14 +60,20 @@ interface LifeyState {
   // tasks
   setTaskStatus: (id: string, status: TaskStatus) => void;
 
-  // capture: write a score (+ optional quantity/note)
+  // capture / connect writes
   addScore: (s: Score) => void;
+  setPreference: (key: string, value: string | number | boolean) => void;
+  dismissBelief: (id: string) => void;
 
-  // chat
+  // privacy
+  setPrivacyDefault: (v: Profile['privacyDefault']) => void;
+
+  // chat (Connect write path)
   sendMessage: (text: string) => void;
 
   // derived
   pulse: () => number;
+  pulseParts: () => PulsePart[];
   activeModules: () => ModuleConfig[];
 }
 
@@ -77,16 +96,29 @@ export const useStore = create<LifeyState>((set, get) => ({
   week: mockWeek,
   thread: mockThread,
   context: mockContext,
+  beliefs: mockBeliefs,
+  preferences: mockPreferences,
+  evidence: mockEvidence,
+  friendsCount: 12,
 
   toggleModule: (id) =>
     set((state) => {
       const modules = state.modules.map((m) =>
         m.id === id ? { ...m, enabled: !m.enabled } : m,
       );
-      return { modules, layout: pruneLayout(state.layout, modules) };
+      // Off modules also drop off the public profile chips.
+      const cleaned = modules.map((m) => (m.enabled ? m : { ...m, showOnProfile: false }));
+      return { modules: cleaned, layout: pruneLayout(state.layout, cleaned) };
     }),
 
   isModuleOn: (id) => !!get().modules.find((m) => m.id === id)?.enabled,
+
+  toggleShowOnProfile: (id) =>
+    set((state) => ({
+      modules: state.modules.map((m) =>
+        m.id === id && m.enabled ? { ...m, showOnProfile: !m.showOnProfile } : m,
+      ),
+    })),
 
   addWidget: (widget, size = 'small') =>
     set((state) => {
@@ -118,6 +150,29 @@ export const useStore = create<LifeyState>((set, get) => ({
 
   addScore: (s) => set((state) => ({ scores: [s, ...state.scores] })),
 
+  setPreference: (key, value) =>
+    set((state) => {
+      const preferences = state.preferences.some((p) => p.key === key)
+        ? state.preferences.map((p) => (p.key === key ? { key, value } : p))
+        : [...state.preferences, { key, value }];
+      // "don't track food" flips the Food module off immediately.
+      if (key === 'trackFood' && value === false) {
+        const modules = state.modules.map((m) =>
+          m.id === 'food' ? { ...m, enabled: false, showOnProfile: false } : m,
+        );
+        return { preferences, modules, layout: pruneLayout(state.layout, modules) };
+      }
+      return { preferences };
+    }),
+
+  dismissBelief: (id) =>
+    set((state) => ({ beliefs: state.beliefs.filter((b) => b.id !== id) })),
+
+  setPrivacyDefault: (v) =>
+    set((state) => ({ profile: { ...state.profile, privacyDefault: v } })),
+
+  // Connect write path — every turn may persist a signal or preference,
+  // then Pulse quietly refreshes (derived from scores/modules).
   sendMessage: (text) =>
     set((state) => {
       const userMsg: ChatMessage = {
@@ -126,37 +181,90 @@ export const useStore = create<LifeyState>((set, get) => ({
         text,
         ts: Date.now(),
       };
-      // Lightweight mock reply so the thread feels alive in the demo.
       const reply: ChatMessage = {
         id: `m-${Date.now() + 1}`,
         role: 'lifey',
         text: mockReply(text),
         ts: Date.now() + 1,
       };
-      return { thread: [...state.thread, userMsg, reply] };
+
+      const write = parseWrite(text);
+      const patch: Partial<LifeyState> = { thread: [...state.thread, userMsg, reply] };
+
+      if (write?.kind === 'score') {
+        patch.scores = [
+          {
+            module: write.module,
+            date: new Date().toISOString().slice(0, 10),
+            source: 'inferred',
+            value1to10: write.value,
+            note: text.slice(0, 80),
+          },
+          ...state.scores,
+        ];
+      } else if (write?.kind === 'preference' && write.key === 'trackFood' && write.value === false) {
+        const modules = state.modules.map((m) =>
+          m.id === 'food' ? { ...m, enabled: false, showOnProfile: false } : m,
+        );
+        patch.modules = modules;
+        patch.layout = pruneLayout(state.layout, modules);
+        patch.preferences = [
+          ...state.preferences.filter((p) => p.key !== 'trackFood'),
+          { key: 'trackFood', value: false },
+        ];
+      }
+
+      return patch;
     }),
 
   pulse: () => {
     const state = get();
-    const on = new Set(state.modules.filter((m) => m.enabled).map((m) => m.id));
-    const today = new Date().toISOString().slice(0, 10);
-    // latest score per active module (prefer today, else most recent)
-    const byModule = new Map<ModuleId, number>();
-    for (const s of state.scores) {
-      if (!on.has(s.module)) continue;
-      if (!byModule.has(s.module)) byModule.set(s.module, s.value1to10);
-      if (s.date === today) byModule.set(s.module, s.value1to10);
-    }
-    const vals = [...byModule.values()];
-    if (vals.length === 0) return 0;
-    return Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10;
+    return computePulse(pulseParts(state.modules, state.scores));
+  },
+
+  pulseParts: () => {
+    const state = get();
+    return pulseParts(state.modules, state.scores);
   },
 
   activeModules: () => get().modules.filter((m) => m.enabled),
 }));
 
+// Very small NL parser for the demo: lets Connect write a food 1–10 or
+// "don't track food". Real version routes through an LLM tool call.
+type Write =
+  | { kind: 'score'; module: ModuleId; value: number }
+  | { kind: 'preference'; key: string; value: boolean };
+
+function parseWrite(text: string): Write | null {
+  const t = text.toLowerCase();
+
+  if (/(don'?t|stop|no).*(track|count).*(food|bite|calorie)/.test(t) || /trackfood\s*=\s*false/.test(t)) {
+    return { kind: 'preference', key: 'trackFood', value: false };
+  }
+
+  // "food 7", "rate food 8/10", "food was a 6 today"
+  const foodMatch = t.match(/food\D{0,12}(\d{1,2})/);
+  if (foodMatch) {
+    const v = Math.min(10, Math.max(1, Number(foodMatch[1])));
+    return { kind: 'score', module: 'food', value: v };
+  }
+  const sleepMatch = t.match(/(slept|sleep)\D{0,12}(\d{1,2})/);
+  if (sleepMatch) {
+    const v = Math.min(10, Math.max(1, Number(sleepMatch[2])));
+    return { kind: 'score', module: 'sleep', value: v };
+  }
+  return null;
+}
+
 function mockReply(text: string): string {
   const t = text.toLowerCase();
+  if (/(don'?t|stop|no).*(track|count).*(food|bite|calorie)/.test(t)) {
+    return "Done — I'll stop scoring food and drop it from your Pulse. We can bring it back anytime.";
+  }
+  if (/food\D{0,12}\d/.test(t)) {
+    return "Got it — logged how food felt today. That's the pattern I care about, not any single meal.";
+  }
   if (t.includes('walk') || t.includes('move')) {
     return "Love it. I'll put a 20-min walk on Today. Mornings work best for you — want it before work?";
   }

@@ -42,6 +42,10 @@
   border-color: rgba(125, 207, 192, 0.35);
   background: var(--mint-dim);
 }
+.ctx-chip.off {
+  color: var(--text-muted);
+  opacity: 0.75;
+}
 
 .thread {
   flex: 1;

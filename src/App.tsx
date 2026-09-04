@@ -5,6 +5,9 @@ import { HomeScreen } from './screens/HomeScreen';
 import { FriendsScreen } from './screens/FriendsScreen';
 import { ConnectScreen } from './screens/ConnectScreen';
 import { YouScreen } from './screens/YouScreen';
+import { ModulesSettings } from './screens/settings/ModulesSettings';
+import { EvidenceSettings } from './screens/settings/EvidenceSettings';
+import { PrivacySettings } from './screens/settings/PrivacySettings';
 import { CaptureSheet } from './screens/CaptureSheet';
 
 export default function App() {
@@ -32,6 +35,9 @@ export default function App() {
           element={<ConnectScreen seed={connectSeed} onSeedConsumed={() => setConnectSeed(undefined)} />}
         />
         <Route path="/you" element={<YouScreen />} />
+        <Route path="/settings/modules" element={<ModulesSettings />} />
+        <Route path="/settings/evidence" element={<EvidenceSettings />} />
+        <Route path="/settings/privacy" element={<PrivacySettings />} />
       </Routes>
 
       <CaptureSheet open={captureOpen} onClose={() => setCaptureOpen(false)} />

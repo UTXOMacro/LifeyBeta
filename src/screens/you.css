@@ -1,0 +1,348 @@
+/* ─────────────────────────────────────────────────────────────
+   You ("Your Pulse model") + Settings pushed screens.
+   Tokens only (theme.css). Matches Home visual system.
+   ───────────────────────────────────────────────────────────── */
+
+.screen-title.serif {
+  font-family: 'New York', 'Georgia', 'Times New Roman', serif;
+  font-weight: 500;
+  font-size: 40px;
+  letter-spacing: -0.01em;
+}
+
+/* ── Identity ───────────────────────────────────────────── */
+.you-identity {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  padding: 6px 0 4px;
+}
+.you-name-lg {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-top: 6px;
+}
+.you-bio {
+  font-size: 15px;
+  color: var(--text-secondary);
+  max-width: 80%;
+}
+.you-friends {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+.friends-glyph {
+  color: var(--text-muted);
+}
+
+/* ── Highlight chips (centered) ─────────────────────────── */
+.you-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin: 16px 0 4px;
+}
+
+/* ── Pulse model card ───────────────────────────────────── */
+.pulse-model {
+  display: block;
+  width: 100%;
+  text-align: left;
+  margin-top: 20px;
+  padding: 18px 18px 16px;
+}
+.pulse-model-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.pulse-model-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.pulse-model-info {
+  color: var(--text-secondary);
+  display: inline-flex;
+}
+.pulse-model-body {
+  display: flex;
+  align-items: flex-end;
+  gap: 18px;
+  margin-top: 10px;
+}
+.pulse-model-number {
+  font-size: 60px;
+  line-height: 0.95;
+  font-weight: 300;
+  color: var(--mint);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  flex: none;
+}
+.pulse-model-rows {
+  flex: 1;
+  min-width: 0;
+  padding-bottom: 4px;
+}
+.pulse-model-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.pulse-model-row:last-child {
+  border-bottom: none;
+}
+.pmr-name {
+  font-size: 15px;
+  color: var(--text-primary);
+}
+.pmr-value {
+  font-size: 15px;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  min-width: 18px;
+  text-align: right;
+}
+.pmr-weight {
+  font-size: 15px;
+  color: var(--mint);
+  font-variant-numeric: tabular-nums;
+  min-width: 40px;
+  text-align: right;
+}
+.pulse-model-row.care-off {
+  grid-template-columns: 1fr auto;
+}
+.pmr-off {
+  font-size: 15px;
+  color: var(--text-muted);
+}
+.pulse-model-caption {
+  margin: 14px 0 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* ── What Lifey knows ───────────────────────────────────── */
+.section-label.lg {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.knows-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.knows-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 16px;
+  text-align: left;
+}
+.knows-text {
+  font-size: 15px;
+  color: var(--text-primary);
+}
+.knows-icon {
+  color: var(--text-secondary);
+  flex: none;
+}
+
+/* ── Moments empty ──────────────────────────────────────── */
+.moments-empty {
+  display: block;
+  width: 100%;
+  text-align: center;
+  padding: 20px;
+  color: var(--text-muted);
+  font-size: 15px;
+}
+
+/* ── Chevron settings list ──────────────────────────────── */
+.settings-list {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+}
+.chevron-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  text-align: left;
+  padding: 15px 2px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.chevron-row:last-child {
+  border-bottom: none;
+}
+.chevron-icon {
+  color: var(--text-secondary);
+  display: inline-flex;
+  flex: none;
+}
+.chevron-label {
+  flex: 1;
+  font-size: 16px;
+  color: var(--text-primary);
+}
+.chevron-caret {
+  color: var(--text-muted);
+  display: inline-flex;
+}
+
+/* ── Settings pushed screens ────────────────────────────── */
+.settings-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0 14px;
+}
+.settings-back {
+  display: inline-flex;
+  color: var(--text-primary);
+  padding: 4px;
+  margin-left: -4px;
+}
+.settings-title {
+  font-size: 22px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--text-primary);
+}
+.settings-helper {
+  font-size: 13px;
+  margin: 4px 2px 16px;
+  line-height: 1.5;
+}
+
+/* Modules settings rows */
+.module-setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  text-align: left;
+}
+.msr-main {
+  min-width: 0;
+}
+.msr-title {
+  font-size: 16px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+.msr-desc {
+  font-size: 13px;
+  margin-top: 2px;
+}
+.msr-profile {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.mini-switch {
+  width: 32px;
+  height: 18px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.12);
+  position: relative;
+  flex: none;
+  transition: background 0.18s ease;
+}
+.mini-switch.on {
+  background: var(--mint);
+}
+.mini-switch .mini-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: var(--radius-pill);
+  background: #fff;
+  transition: transform 0.18s ease;
+}
+.mini-switch.on .mini-knob {
+  transform: translateX(14px);
+}
+
+/* Evidence cards */
+.evidence-group {
+  margin-bottom: 6px;
+}
+.evidence-card {
+  display: block;
+  text-align: left;
+  padding: 16px;
+  margin-bottom: 10px;
+}
+.ev-claim {
+  font-size: 15px;
+  color: var(--text-primary);
+  line-height: 1.45;
+}
+.ev-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0;
+}
+.ev-grade {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--card-border);
+}
+.ev-grade.strong {
+  color: var(--mint);
+  background: var(--mint-dim);
+  border-color: rgba(125, 207, 192, 0.35);
+}
+.ev-grade.moderate {
+  color: #cfe6df;
+}
+.ev-grade.emerging,
+.ev-grade.preference {
+  color: var(--text-secondary);
+}
+.ev-source {
+  font-size: 12px;
+}
+.ev-uses {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+.ev-uses-label {
+  display: block;
+  color: var(--text-muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 3px;
+}
+
+/* Privacy segmented control reused .privacy-opts / .priv-opt from screens.css */

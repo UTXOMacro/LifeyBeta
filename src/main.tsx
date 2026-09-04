@@ -6,6 +6,7 @@ import './theme.css';
 import './components/nav.css';
 import './components/home.css';
 import './screens/screens.css';
+import './screens/you.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

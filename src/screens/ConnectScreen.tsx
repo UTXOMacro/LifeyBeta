@@ -4,9 +4,9 @@ import { useStore } from '../store';
 // Empty-state starter prompts from the brief.
 const STARTERS = [
   'How I want to live',
-  'What this week looks like',
-  'What usually derails me',
+  'What Pulse is allowed to use',
   'What good enough means',
+  'What I do not want judged',
 ];
 
 export function ConnectScreen({ seed, onSeedConsumed }: { seed?: string; onSeedConsumed: () => void }) {
@@ -47,8 +47,9 @@ export function ConnectScreen({ seed, onSeedConsumed }: { seed?: string; onSeedC
       <div className="chip-strip">
         <span className="ctx-chip on">Sleep on</span>
         <span className="ctx-chip on">Move on</span>
-        <span className="ctx-chip">Bed ~10:30</span>
-        <span className="ctx-chip">Prefers mornings</span>
+        <span className="ctx-chip on">Food on</span>
+        <span className="ctx-chip off">Care off</span>
+        <span className="ctx-chip">Bed ~11</span>
       </div>
 
       <div className="thread" ref={scrollRef}>
