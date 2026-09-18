@@ -1,0 +1,5 @@
+# Basic Auth site-wide gate.
+# Works free on legacy Netlify accounts (created before 2025-09-04).
+# New accounts: this is silently ignored (Pro-gated) — the in-app gate covers that case.
+/*
+  Basic-Auth: lifey:ChangeMe-Beta2026

@@ -2,7 +2,9 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
+import PasswordGate from './PasswordGate';
 import './theme.css';
+import './gate.css';
 import './components/nav.css';
 import './components/home.css';
 import './screens/screens.css';
@@ -10,8 +12,10 @@ import './screens/you.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
+    <PasswordGate>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </PasswordGate>
   </StrictMode>,
 );
