@@ -192,6 +192,30 @@
   margin-top: 8px;
 }
 
+/* Connect-with-Lifey widget (replaces Tasks tile) */
+.connect-tile {
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(155deg, var(--mint-wash), transparent 60%), var(--card);
+}
+.connect-tile-line {
+  font-size: 15px;
+  color: var(--text-primary);
+  font-weight: 500;
+  margin-top: 12px;
+  line-height: 1.25;
+}
+.connect-tile-cta {
+  margin-top: auto;
+  padding-top: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mint);
+}
+.connect-tile-arrow {
+  font-weight: 500;
+}
+
 /* ── 5. Week strip (on canvas) ──────────────────────────── */
 .week-strip {
   display: flex;

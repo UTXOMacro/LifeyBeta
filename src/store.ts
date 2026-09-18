@@ -460,7 +460,14 @@ function mockReply(text: string): string {
   const parts: string[] = [];
   for (const w of writes) {
     if (w.kind !== 'score') continue;
-    if (w.module === 'sleep') parts.push(w.value <= 4 ? 'logged the short night — that nudges Sleep down, no guilt' : 'logged solid sleep — that lifts your Sleep');
+    if (w.module === 'sleep')
+      parts.push(
+        w.value <= 4
+          ? 'logged the short night — that nudges Sleep down, no guilt'
+          : w.value <= 6
+            ? "logged the night — a bit under your usual, so Sleep dips slightly"
+            : 'logged solid sleep — that lifts your Sleep',
+      );
     if (w.module === 'movement') parts.push('counted that movement — Move goes up');
     if (w.module === 'food') parts.push(w.value >= 7 ? 'nice — that supportive choice lifts Nutrition' : 'logged it as an off-plan meal — Nutrition dips a little, tomorrow resets');
   }

@@ -16,7 +16,7 @@ export function HomeScreen({ onOpenConnect }: { onOpenConnect: (seed?: string) =
       <HomeHeader onOpenConnect={onOpenConnect} />
       <NowCard onOpenConnect={onOpenConnect} />
       <PulseCard onOpenConnect={onOpenConnect} />
-      <MetricTiles />
+      <MetricTiles onOpenConnect={onOpenConnect} />
       <WeekStrip />
       <Today />
       <FriendsPeek />

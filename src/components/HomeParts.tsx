@@ -105,19 +105,15 @@ export function PulseCard({ onOpenConnect }: { onOpenConnect: (seed?: string) =>
   );
 }
 
-// ── 4. Two-up metric tiles ──────────────────────────────
-export function MetricTiles() {
+// ── 4. Two-up tiles: Sleep metric + Connect-with-Lifey widget ──
+export function MetricTiles({ onOpenConnect }: { onOpenConnect: (seed?: string) => void }) {
   const scores = useStore((s) => s.scores);
-  const tasks = useStore((s) => s.tasks);
 
   const scoresFor = (m: ModuleId) =>
     scores.filter((s) => s.module === m).slice(0, 7).reverse().map((s) => s.value1to10);
 
   const sleepVals = scoresFor('sleep');
   const sleepLatest = sleepVals[sleepVals.length - 1] ?? 0;
-
-  // Tasks tile reflects what's queued today (mock: 2, walk up next).
-  void tasks;
 
   return (
     <div className="tiles-row">
@@ -128,15 +124,27 @@ export function MetricTiles() {
         spark={sleepVals}
         sparkColor={scoreColor(sleepLatest)}
       />
-      <MetricTile
-        icon={<CheckIcon />}
-        label="Tasks"
-        value="2"
-        subtitle="Evening walk next"
-        spark={[2, 4, 3, 5, 6, 7, 9]}
-        sparkColor="var(--mint)"
-      />
+      <ConnectTile onOpenConnect={onOpenConnect} />
     </div>
+  );
+}
+
+// Connect-with-Lifey widget — replaces Tasks. Taps into the same Connect
+// thread; a quick line keeps the door open to log/reflect in one tap.
+function ConnectTile({ onOpenConnect }: { onOpenConnect: (seed?: string) => void }) {
+  return (
+    <GlassCard className="metric-tile connect-tile" onClick={() => onOpenConnect()}>
+      <div className="tile-head">
+        <span className="tile-icon">
+          <ChatIcon />
+        </span>
+        <span className="tile-label">Lifey</span>
+      </div>
+      <div className="connect-tile-line">How's today going?</div>
+      <div className="connect-tile-cta">
+        Chat <span className="connect-tile-arrow">→</span>
+      </div>
+    </GlassCard>
   );
 }
 
@@ -304,11 +312,10 @@ function MoonIcon() {
     </svg>
   );
 }
-function CheckIcon() {
+function ChatIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" {...svgProps}>
-      <circle cx="12" cy="12" r="8.5" />
-      <path d="M8.5 12.2l2.4 2.4 4.6-5" />
+      <path d="M4 5h16v11H8l-4 3.5z" />
     </svg>
   );
 }

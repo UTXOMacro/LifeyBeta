@@ -2,17 +2,44 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '../store';
 import type { Conversation } from '../types';
 
-// Empty-state starter prompts from the brief.
-const STARTERS = [
-  'How I want to live',
-  'What Pulse is allowed to use',
-  'What good enough means',
-  'What I do not want judged',
+// Starter prompts for new/empty chats. Grouped so new users see what Connect
+// can do: log a quick signal (moves Pulse), set a preference, or reflect.
+// A couple are one-tap logs that immediately show the feedback loop.
+interface StarterGroup {
+  label: string;
+  icon: 'log' | 'prefs' | 'reflect';
+  prompts: string[];
+}
+
+const STARTER_GROUPS: StarterGroup[] = [
+  {
+    label: 'Log something',
+    icon: 'log',
+    prompts: [
+      'I slept about 5 hours last night',
+      'Did a 30-min walk today',
+      'Chose chicken and rice over burgers',
+    ],
+  },
+  {
+    label: 'Set a preference',
+    icon: 'prefs',
+    prompts: ["Don't count every bite", 'I prefer mornings for workouts'],
+  },
+  {
+    label: 'Reflect',
+    icon: 'reflect',
+    prompts: ['How I want to live', 'What good enough means', 'What I do not want judged'],
+  },
 ];
+
+// A tiny highlighted set for the very first row of bubbles (quick picks).
+const QUICK_PICKS = ['I slept about 5 hours last night', 'Did a 30-min walk today'];
 
 export function ConnectScreen({ seed, onSeedConsumed }: { seed?: string; onSeedConsumed: () => void }) {
   const conversations = useStore((s) => s.conversations);
   const activeId = useStore((s) => s.activeConversationId);
+  const firstName = useStore((s) => s.profile.firstName);
   const sendMessage = useStore((s) => s.sendMessage);
   const newConversation = useStore((s) => s.newConversation);
   const selectConversation = useStore((s) => s.selectConversation);
@@ -84,21 +111,15 @@ export function ConnectScreen({ seed, onSeedConsumed }: { seed?: string; onSeedC
       </div>
 
       <div className="thread" ref={scrollRef}>
-        {messages.length === 0 && (
-          <div className="empty-starters">
-            <p className="faint">Start wherever feels right:</p>
-            {STARTERS.map((s) => (
-              <button key={s} className="starter" onClick={() => send(s)}>
-                {s}
-              </button>
-            ))}
-          </div>
+        {messages.length === 0 ? (
+          <StarterState firstName={firstName} onPick={send} />
+        ) : (
+          messages.map((m) => (
+            <div key={m.id} className={`bubble ${m.role}`}>
+              {m.text}
+            </div>
+          ))
         )}
-        {messages.map((m) => (
-          <div key={m.id} className={`bubble ${m.role}`}>
-            {m.text}
-          </div>
-        ))}
       </div>
 
       <div className="composer">
@@ -122,6 +143,61 @@ export function ConnectScreen({ seed, onSeedConsumed }: { seed?: string; onSeedC
       />
     </div>
   );
+}
+
+// ── Starter state (new-user prompt bubbles) ─────────────
+function StarterState({ firstName, onPick }: { firstName: string; onPick: (t: string) => void }) {
+  return (
+    <div className="starter-state">
+      <div className="starter-hero">
+        <span className="starter-spark">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 3v4M12 17v4M3 12h4M17 12h4" />
+            <circle cx="12" cy="12" r="2.6" />
+          </svg>
+        </span>
+        <h2 className="starter-title">Hey {firstName} — what's on your mind?</h2>
+        <p className="starter-sub faint">
+          Tell me how today's going and I'll keep your Pulse honest. Tap one to start:
+        </p>
+      </div>
+
+      {/* Quick picks — one tap logs a real signal (shows the feedback loop) */}
+      <div className="starter-quick">
+        {QUICK_PICKS.map((q) => (
+          <button key={q} className="starter-bubble primary" onClick={() => onPick(q)}>
+            {q}
+          </button>
+        ))}
+      </div>
+
+      {/* Grouped starters */}
+      {STARTER_GROUPS.map((g) => (
+        <div key={g.label} className="starter-group">
+          <div className="starter-group-label">
+            <StarterIcon kind={g.icon} />
+            {g.label}
+          </div>
+          <div className="starter-bubbles">
+            {g.prompts.map((p) => (
+              <button key={p} className="starter-bubble" onClick={() => onPick(p)}>
+                {p}
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function StarterIcon({ kind }: { kind: StarterGroup['icon'] }) {
+  const p = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.7, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
+  if (kind === 'log')
+    return <svg width="15" height="15" viewBox="0 0 24 24" {...p}><path d="M12 5v14M5 12h14" /></svg>;
+  if (kind === 'prefs')
+    return <svg width="15" height="15" viewBox="0 0 24 24" {...p}><path d="M4 7h11M4 12h16M4 17h8" /><circle cx="18" cy="7" r="2" /><circle cx="14" cy="17" r="2" /></svg>;
+  return <svg width="15" height="15" viewBox="0 0 24 24" {...p}><path d="M20 14.5A8 8 0 1 1 9.5 4a6.4 6.4 0 0 0 10.5 10.5z" /></svg>;
 }
 
 // ── Conversation drawer ─────────────────────────────────

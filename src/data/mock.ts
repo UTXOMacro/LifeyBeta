@@ -210,6 +210,16 @@ export const mockContext: LifeContext = {
 // list feel and demonstrate cross-chat context (sleep, food, travel).
 const HOUR = 1000 * 60 * 60;
 export const mockConversations: Conversation[] = [
+  // Boot into a fresh, empty chat so new users land on the starter bubbles.
+  // The seeded conversations below still show in the drawer history.
+  {
+    id: 'c-new',
+    title: 'New chat',
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    isDraft: true,
+    messages: [],
+  },
   {
     id: 'c-today',
     title: 'Tomorrow’s walk',
