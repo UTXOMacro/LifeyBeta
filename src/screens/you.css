@@ -101,6 +101,11 @@
   width: 96px;
   text-align: center;
 }
+/* Recovery softens the number so it reads as a starting point, not a verdict. */
+.pulse-model-number.soften {
+  color: var(--text-secondary);
+  opacity: 0.82;
+}
 .pulse-model-rows {
   flex: 1;
   min-width: 0;
@@ -145,6 +150,13 @@
   margin: 14px 0 0;
   font-size: 13px;
   color: var(--text-secondary);
+  line-height: 1.4;
+}
+/* The fixed disclaimer sits quieter beneath the mode-aware line. */
+.pulse-model-caption.subtle {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
 }
 
 /* ── What Lifey knows ───────────────────────────────────── */

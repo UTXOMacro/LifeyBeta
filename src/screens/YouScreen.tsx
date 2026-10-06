@@ -1,7 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import { Avatar, ChevronRow, GlassCard, ModuleChip } from '../components/ui';
-import type { Belief, PulsePart } from '../types';
+import { pulseFraming } from '../lib/mode';
+import type { Belief, ModeState, PulsePart } from '../types';
 
 // You — "Your Pulse model": identity + why Pulse is this number for this
 // person + entry to settings. Not a second Home; switches/privacy live in
@@ -45,6 +46,7 @@ export function YouScreen() {
       <PulseCompositionCard
         pulse={pulse}
         parts={parts}
+        mode={modeState}
         careOff={!isOn(modules, 'care')}
         onHistory={() => navigate('/pulse/history')}
       />
@@ -103,16 +105,19 @@ function isOn(modules: ReturnType<typeof useStore.getState>['modules'], id: stri
 function PulseCompositionCard({
   pulse,
   parts,
+  mode,
   careOff,
   onHistory,
 }: {
   pulse: number;
   parts: PulsePart[];
+  mode: ModeState;
   careOff: boolean;
   onHistory: () => void;
 }) {
+  const framing = pulseFraming(mode.mode, mode.trend);
   return (
-    <GlassCard className="pulse-model">
+    <GlassCard className={`pulse-model mode-${mode.mode}`}>
       <div className="pulse-model-head">
         <span className="pulse-model-title">Your Pulse model</span>
         <button className="pulse-model-history" onClick={onHistory}>
@@ -124,7 +129,7 @@ function PulseCompositionCard({
       </div>
 
       <div className="pulse-model-body">
-        <div className="pulse-model-number">{pulse.toFixed(1)}</div>
+        <div className={`pulse-model-number ${framing.softenNumber ? 'soften' : ''}`}>{pulse.toFixed(1)}</div>
         <div className="pulse-model-rows">
           {parts.map((p) => (
             <div key={p.module} className="pulse-model-row">
@@ -142,7 +147,8 @@ function PulseCompositionCard({
         </div>
       </div>
 
-      <p className="pulse-model-caption">
+      <p className="pulse-model-caption">{framing.subtext}</p>
+      <p className="pulse-model-caption subtle">
         Pulse estimates how supported today looks. Not a diagnosis.
       </p>
     </GlassCard>

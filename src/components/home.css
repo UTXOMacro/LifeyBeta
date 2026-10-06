@@ -111,9 +111,8 @@
 }
 .pulse-ring-wrap {
   position: absolute;
-  top: 50%;
+  top: 20px;
   right: 22px;
-  transform: translateY(-50%);
   opacity: 0.95;
   pointer-events: none;
 }
@@ -145,15 +144,60 @@
   color: var(--mint);
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
-  margin: 8px 0 20px;
+  margin: 8px 0 6px;
+}
+/* Recovery softens the number so the supportive line leads, not the score. */
+.pulse-value.soften {
+  color: var(--text-secondary);
+  opacity: 0.8;
+}
+/* Pulse trend row — direction vs. last week (grounded in the mode engine). */
+.pulse-trend {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 8px;
+  position: relative;
+  z-index: 1;
+  max-width: 60%;
+}
+.pulse-value {
+  position: relative;
+  z-index: 1;
+}
+.pulse-trend-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  letter-spacing: 0.01em;
+}
+.trend-arrow.trend-up {
+  color: var(--mint);
+}
+.trend-arrow.trend-down {
+  color: #e8b974;
+}
+.trend-arrow.trend-steady,
+.trend-arrow.trend-new {
+  color: var(--text-secondary);
+}
+/* Left text column must clear the top-right ring (≈132px wide). */
+.pulse-subtext {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin: 0 0 16px;
+  max-width: 60%;
+  position: relative;
+  z-index: 1;
 }
 .pulse-chips {
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   gap: 7px;
   position: relative;
   z-index: 1;
-  max-width: 62%;
+  max-width: 100%;
+  row-gap: 8px;
 }
 
 /* ── 4. Two-up metric tiles ─────────────────────────────── */

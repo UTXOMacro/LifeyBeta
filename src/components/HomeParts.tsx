@@ -5,7 +5,7 @@ import { mockFriends } from '../data/mock';
 import type { ModuleId, Task } from '../types';
 import { Avatar, GhostIconButton, GlassCard, ModuleChip, PulseRing } from './ui';
 import { Sparkline } from './Sparkline';
-import { MODE_VOICE } from '../lib/mode';
+import { MODE_VOICE, pulseFraming, trendLabel } from '../lib/mode';
 
 // ─────────────────────────────────────────────────────────────
 // Home composition — fixed curated layout matching Lifey-Home-01.
@@ -72,15 +72,20 @@ export function NowCard({ onOpenConnect }: { onOpenConnect: (seed?: string) => v
 }
 
 // ── 3. Pulse card (hero) ────────────────────────────────
+// Pulse stays the anchor. The NUMBER is unchanged by mode — only its framing
+// adapts: a trend label (vs. last week) + mode-aware status/subtext, and in
+// Recovery the number softens so the supportive line leads, not the score.
 export function PulseCard({ onOpenConnect }: { onOpenConnect: (seed?: string) => void }) {
   const pulse = useStore((s) => s.pulse)();
   const active = useStore((s) => s.modules).filter((m) => m.enabled);
+  const { mode, trend } = useStore((s) => s.mode)();
+  const framing = pulseFraming(mode, trend);
 
   const navigate = useNavigate();
   // Pulse tap → the You composition card (one source of truth).
   void onOpenConnect;
   return (
-    <GlassCard className="pulse-card" onClick={() => navigate('/you')}>
+    <GlassCard className={`pulse-card mode-${mode}`} onClick={() => navigate('/you')}>
       <div className="pulse-ring-wrap">
         <PulseRing value={pulse} size={132} />
       </div>
@@ -98,7 +103,12 @@ export function PulseCard({ onOpenConnect }: { onOpenConnect: (seed?: string) =>
           See more
         </span>
       </div>
-      <div className="pulse-value">{pulse.toFixed(1)}</div>
+      <div className={`pulse-value ${framing.softenNumber ? 'soften' : ''}`}>{pulse.toFixed(1)}</div>
+      <div className="pulse-trend">
+        <TrendArrow trend={trend} />
+        <span className="pulse-trend-label">{trendLabel(trend)}</span>
+      </div>
+      <p className="pulse-subtext">{framing.subtext}</p>
       <div className="pulse-chips">
         {active.map((m) => (
           <ModuleChip key={m.id}>{m.label}</ModuleChip>
@@ -106,6 +116,15 @@ export function PulseCard({ onOpenConnect }: { onOpenConnect: (seed?: string) =>
       </div>
     </GlassCard>
   );
+}
+
+// Small directional glyph for the Pulse trend (up / steady / down / new).
+function TrendArrow({ trend }: { trend: 'up' | 'steady' | 'down' | 'new' }) {
+  const p = { width: 14, height: 14, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, className: `trend-arrow trend-${trend}` };
+  if (trend === 'up') return <svg {...p}><path d="M5 15l7-7 7 7" /></svg>;
+  if (trend === 'down') return <svg {...p}><path d="M5 9l7 7 7-7" /></svg>;
+  if (trend === 'new') return <svg {...p}><circle cx="12" cy="12" r="7" /></svg>;
+  return <svg {...p}><path d="M5 12h14" /></svg>;
 }
 
 // ── 4. Two-up tiles: Sleep metric + Connect-with-Lifey widget ──

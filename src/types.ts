@@ -21,6 +21,10 @@ export type Visibility = 'me' | 'friends' | 'everyone';
 // Cruise is the destination — never manufacture goals to keep Build.
 export type LifeyMode = 'build' | 'cruise' | 'recovery';
 
+// Direction of travel vs. the prior week — grounds Pulse framing in the
+// same trend the mode engine already computes (no extra math, no new score).
+export type PulseTrend = 'up' | 'steady' | 'down' | 'new';
+
 // Why Lifey picked the current mode — transparent + explainable.
 export interface ModeState {
   mode: LifeyMode;
@@ -30,6 +34,8 @@ export interface ModeState {
   confidence: number;
   /** supporting signals for debugging / “why am I seeing this” */
   signals: string[];
+  /** Pulse direction vs. prior week (“new” when we lack prior data) */
+  trend: PulseTrend;
 }
 
 // How a score entered the system. Provenance is surfaced in Pulse History.

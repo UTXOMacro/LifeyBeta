@@ -1,4 +1,4 @@
-import type { LifeyMode, ModeState, ModuleConfig, Score, Task } from '../types';
+import type { LifeyMode, ModeState, ModuleConfig, PulseTrend, Score, Task } from '../types';
 import { pulseValue } from './pulse';
 
 // ─────────────────────────────────────────────────────────────
@@ -75,6 +75,18 @@ export function deriveMode(
   signals.push(`${lowDays} low day(s)`);
   if (skipped) signals.push(`${skipped} skipped task(s)`);
 
+  // Direction vs. prior week — shared by every mode so Pulse framing is
+  // grounded in the same trend (no new score, no extra math). A small band
+  // around 0 counts as "steady" so normal noise doesn't read as a swing.
+  const trend: PulseTrend =
+    pulsePrior == null
+      ? 'new'
+      : drop <= -0.4
+      ? 'up'
+      : drop >= 0.4
+      ? 'down'
+      : 'steady';
+
   // ── Recovery: a real downturn, not scattered noise. We require that the
   // CURRENT state is actually struggling (Pulse itself is low), so one rough
   // night inside a good week never triggers it. "A rough day does not erase
@@ -92,7 +104,7 @@ export function deriveMode(
       : strugglingRun
       ? 'A few harder days in a row — let’s keep it simple and rebuild gently.'
       : 'A few things slipped — no judgment, just the easiest next step.';
-    return { mode: 'recovery', reason, confidence: clamp01(0.5 + drop / 6 + lowDays * 0.06), signals };
+    return { mode: 'recovery', reason, confidence: clamp01(0.5 + drop / 6 + lowDays * 0.06), signals, trend };
   }
 
   // ── Build: actively working AND not struggling. User is changing something.
@@ -103,6 +115,7 @@ export function deriveMode(
       reason: 'You’re putting in the work right now — I’ll stay close and help.',
       confidence: clamp01(0.4 + (activityCount - BUILD_ACTIVITY) * 0.06),
       signals,
+      trend,
     };
   }
 
@@ -116,6 +129,7 @@ export function deriveMode(
       : 'Keeping it light for now — reach out anytime.',
     confidence: steadyGood ? 0.6 : 0.4,
     signals,
+    trend,
   };
 }
 
@@ -149,6 +163,64 @@ export interface ModeVoice {
   involvement: 'high' | 'light';
   /** opening half of a "Lifey Now" line — paired with a concrete follow-up */
   lead: (firstName: string) => string;
+}
+
+// ─────────────────────────────────────────────────────────────
+// Pulse FRAMING by mode. The number is NEVER changed by mode — only how
+// it's presented. This keeps Pulse trustworthy while letting it feel
+// intelligent: steady in Cruise, directional in Build, de-emphasized (the
+// supportive line leads) in Recovery so a low day never reads as a verdict.
+// ─────────────────────────────────────────────────────────────
+export interface ModePulseFraming {
+  /** short status word under the number */
+  status: string;
+  /** one calm line of context beneath the ring / caption */
+  subtext: string;
+  /** Recovery softens the number so the supportive line leads, not the score */
+  softenNumber: boolean;
+}
+
+// Trend → a tiny human label (arrow handled in the component).
+export function trendLabel(trend: PulseTrend): string {
+  switch (trend) {
+    case 'up':
+      return 'trending up';
+    case 'down':
+      return 'easing off';
+    case 'steady':
+      return 'steady';
+    case 'new':
+      return 'getting to know you';
+  }
+}
+
+export function pulseFraming(mode: LifeyMode, trend: PulseTrend): ModePulseFraming {
+  if (mode === 'recovery') {
+    return {
+      status: 'rebuilding',
+      subtext: 'Not a verdict — just where today starts. One small step is plenty.',
+      softenNumber: true,
+    };
+  }
+  if (mode === 'build') {
+    return {
+      status: trend === 'up' ? 'building' : 'on it',
+      subtext:
+        trend === 'up'
+          ? 'Momentum is going your way — keep the small wins coming.'
+          : 'You’re putting in the work. It adds up.',
+      softenNumber: false,
+    };
+  }
+  // Cruise — calm, glanceable, never attention-seeking.
+  return {
+    status: trend === 'new' ? 'settling in' : 'steady',
+    subtext:
+      trend === 'new'
+        ? 'Still learning your rhythm — this will sharpen over time.'
+        : 'Things are in a good rhythm. Nothing needed from you.',
+    softenNumber: false,
+  };
 }
 
 export const MODE_VOICE: Record<LifeyMode, ModeVoice> = {
