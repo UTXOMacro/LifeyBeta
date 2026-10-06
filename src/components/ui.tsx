@@ -3,22 +3,16 @@ import { BottomNav } from './BottomNav';
 
 // ─────────────────────────────────────────────────────────────
 // Shared visual system. Every screen composes from these so
-// Home / Friends / Capture / Connect / You look like one product.
+// Lifey / Today / My Life / Me look like one product.
 // Tokens live in theme.css — no second color system here.
 // ─────────────────────────────────────────────────────────────
 
 /** AppScaffold — canvas + header glow + floating tab bar. */
-export function AppScaffold({
-  children,
-  onCapture,
-}: {
-  children: ReactNode;
-  onCapture: () => void;
-}) {
+export function AppScaffold({ children }: { children: ReactNode }) {
   return (
     <div className="scaffold">
       <div className="scaffold-scroll">{children}</div>
-      <BottomNav onCapture={onCapture} />
+      <BottomNav />
     </div>
   );
 }

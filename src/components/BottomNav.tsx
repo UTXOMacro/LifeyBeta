@@ -1,46 +1,40 @@
 import { NavLink } from 'react-router-dom';
 
-// Floating frosted tab bar: Home · Friends · mint + · Connect · You
-// Center + is the Capture sheet, visually raised and overlapping the bar.
-export function BottomNav({ onCapture }: { onCapture: () => void }) {
+// Four destinations only (PRD): Lifey · Today · My Life · Me.
+// Conversation-first — "Lifey" is the front door. No center capture button
+// (capture is conversational now), no social tab (social is Post-MVP).
+export function BottomNav() {
   return (
     <nav className="tab-bar glass">
       <NavLink to="/" className="tab-item" end>
         {({ isActive }) => (
           <>
-            <Icon name="home" active={isActive} />
-            <span className="tab-label">Home</span>
+            <Icon name="lifey" active={isActive} />
+            <span className="tab-label">Lifey</span>
           </>
         )}
       </NavLink>
-      <NavLink to="/friends" className="tab-item">
+      <NavLink to="/today" className="tab-item">
         {({ isActive }) => (
           <>
-            <Icon name="friends" active={isActive} />
-            <span className="tab-label">Friends</span>
+            <Icon name="today" active={isActive} />
+            <span className="tab-label">Today</span>
           </>
         )}
       </NavLink>
-
-      <button className="tab-capture" onClick={onCapture} aria-label="Capture">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#06110e" strokeWidth="2.4" strokeLinecap="round">
-          <path d="M12 5v14M5 12h14" />
-        </svg>
-      </button>
-
-      <NavLink to="/connect" className="tab-item">
+      <NavLink to="/my-life" className="tab-item">
         {({ isActive }) => (
           <>
-            <Icon name="connect" active={isActive} />
-            <span className="tab-label">Connect</span>
+            <Icon name="mylife" active={isActive} />
+            <span className="tab-label">My Life</span>
           </>
         )}
       </NavLink>
-      <NavLink to="/you" className="tab-item">
+      <NavLink to="/me" className="tab-item">
         {({ isActive }) => (
           <>
-            <Icon name="you" active={isActive} />
-            <span className="tab-label">You</span>
+            <Icon name="me" active={isActive} />
+            <span className="tab-label">Me</span>
           </>
         )}
       </NavLink>
@@ -61,28 +55,29 @@ function Icon({ name, active }: { name: string; active: boolean }) {
     className: `tab-icon ${active ? 'active' : ''}`,
   };
   switch (name) {
-    case 'home':
-      return (
-        <svg {...common}>
-          <path d="M3 10.5 12 3l9 7.5" />
-          <path d="M5 9.5V21h14V9.5" />
-        </svg>
-      );
-    case 'friends':
-      return (
-        <svg {...common}>
-          <circle cx="9" cy="8" r="3.2" />
-          <path d="M3.5 20a5.5 5.5 0 0 1 11 0" />
-          <path d="M16 5.2a3.2 3.2 0 0 1 0 5.6M17 20a5.5 5.5 0 0 0-2.2-4.4" />
-        </svg>
-      );
-    case 'connect':
+    case 'lifey':
+      // Conversation — the primary surface.
       return (
         <svg {...common}>
           <path d="M4 5h16v11H8l-4 3.5z" />
         </svg>
       );
-    case 'you':
+    case 'today':
+      // A focused "today" mark — sun/day glance, not a calendar grid.
+      return (
+        <svg {...common}>
+          <circle cx="12" cy="12" r="4" />
+          <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4" />
+        </svg>
+      );
+    case 'mylife':
+      // Plans / routines / progress — layered stack.
+      return (
+        <svg {...common}>
+          <path d="M4 6h16M4 12h16M4 18h10" />
+        </svg>
+      );
+    case 'me':
       return (
         <svg {...common}>
           <circle cx="12" cy="8" r="3.4" />
