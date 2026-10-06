@@ -182,10 +182,12 @@ What we'd actually tell the user, in Lifey's calm voice:
 
 ## Open decisions for Lance/Ryan
 
-1. **Default raw-chat retention:** keep-forever (proposed) vs. a default expiry?
-2. **Auto-expiry presets:** are 90 / 30 / per-session the right options?
-3. **Purge grace period:** 30 days (proposed) — longer/shorter?
-4. **Incognito / pause-learning:** in MVP, or MVP-Low?
-5. **Export format:** JSON (dev-friendly) + a human-readable PDF/HTML? Which for MVP?
+1. **Default raw-chat retention:** ✅ **DECIDED 2026-10-06 — keep-forever by
+   default.** Chats persist until the user deletes them; opt-in auto-expiry
+   (§2) remains available for users who want it. Matches chat-app norms.
+2. **Auto-expiry presets:** are 90 / 30 / per-session the right options? _(open)_
+3. **Purge grace period:** 30 days (proposed) — longer/shorter? _(open)_
+4. **Incognito / pause-learning:** in MVP, or MVP-Low? _(open)_
+5. **Export format:** JSON (dev-friendly) + a human-readable PDF/HTML? Which for MVP? _(open)_
 
 _Once these are settled, this doc becomes the build spec for the storage seam._
