@@ -87,6 +87,8 @@ interface LifeyState {
 
   // conversations (ChatGPT-style multi-chat)
   newConversation: () => string;
+  /** Lifey-tab “go home”: fresh composer, reusing an empty draft if present */
+  goHome: () => void;
   selectConversation: (id: string) => void;
   renameConversation: (id: string, title: string) => void;
   deleteConversation: (id: string) => void;
@@ -284,6 +286,36 @@ export const useStore = create<LifeyState>((set, get) => ({
       activeConversationId: id,
     }));
     return id;
+  },
+
+  // Tapping the Lifey tab = “go home.” Land on a fresh, empty composer so it
+  // never feels like you’re stuck inside an old chat — but don’t pile up empty
+  // drafts: reuse an existing empty draft if one already exists. Previous chats
+  // are preserved and reachable from the Recent row / history drawer.
+  goHome: () => {
+    set((state) => {
+      const emptyDraft = state.conversations.find(
+        (c) => c.messages.length === 0,
+      );
+      if (emptyDraft) {
+        // Move it to the top and make it active (tidy, no duplicates).
+        return {
+          activeConversationId: emptyDraft.id,
+          conversations: [
+            emptyDraft,
+            ...state.conversations.filter((c) => c.id !== emptyDraft.id),
+          ],
+        };
+      }
+      const id = `c-${Date.now()}`;
+      return {
+        activeConversationId: id,
+        conversations: [
+          { id, title: 'New chat', messages: [], createdAt: Date.now(), updatedAt: Date.now(), isDraft: true },
+          ...state.conversations,
+        ],
+      };
+    });
   },
 
   selectConversation: (id) => set({ activeConversationId: id }),

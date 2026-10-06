@@ -39,6 +39,13 @@ export function ConnectScreen({ seed, onSeedConsumed }: { seed?: string; onSeedC
   const active = conversations.find((c) => c.id === activeId);
   const messages = active?.messages ?? [];
 
+  // Recent, real conversations (have messages) — surfaced on the home/empty
+  // state so you can hop straight into a relevant chat without the drawer.
+  const recentConversations = [...conversations]
+    .filter((c) => c.messages.length > 0)
+    .sort((a, b) => b.updatedAt - a.updatedAt)
+    .slice(0, 3);
+
   const [input, setInput] = useState('');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [memoryOpen, setMemoryOpen] = useState(false);
@@ -98,7 +105,13 @@ export function ConnectScreen({ seed, onSeedConsumed }: { seed?: string; onSeedC
 
       <div className={`thread ${messages.length === 0 ? 'empty' : ''}`} ref={scrollRef}>
         {messages.length === 0 ? (
-          <StarterState firstName={firstName} onPick={send} />
+          <StarterState
+            firstName={firstName}
+            onPick={send}
+            recent={recentConversations}
+            onOpenRecent={pickConversation}
+            onSeeAll={() => setDrawerOpen(true)}
+          />
         ) : (
           messages.map((m) => (
             <div key={m.id} className={`bubble ${m.role}`}>
@@ -132,7 +145,19 @@ export function ConnectScreen({ seed, onSeedConsumed }: { seed?: string; onSeedC
 }
 
 // ── Starter state (new-user prompt bubbles) ─────────────
-function StarterState({ firstName, onPick }: { firstName: string; onPick: (t: string) => void }) {
+function StarterState({
+  firstName,
+  onPick,
+  recent,
+  onOpenRecent,
+  onSeeAll,
+}: {
+  firstName: string;
+  onPick: (t: string) => void;
+  recent: Conversation[];
+  onOpenRecent: (id: string) => void;
+  onSeeAll: () => void;
+}) {
   const [starters, setStarters] = useState(() => pickStarters(STARTER_POOL, 3));
 
   return (
@@ -156,6 +181,30 @@ function StarterState({ firstName, onPick }: { firstName: string; onPick: (t: st
           More ideas
         </button>
       </div>
+
+      {/* Recent chats — one tap back into a relevant conversation. */}
+      {recent.length > 0 && (
+        <div className="starter-recent">
+          <div className="starter-recent-head">
+            <span className="starter-recent-label">Recent</span>
+            <button className="starter-recent-all" onClick={onSeeAll}>
+              See all
+            </button>
+          </div>
+          <div className="starter-recent-list">
+            {recent.map((c) => (
+              <button
+                key={c.id}
+                className="starter-recent-item"
+                onClick={() => onOpenRecent(c.id)}
+              >
+                <span className="starter-recent-title">{c.title}</span>
+                <span className="starter-recent-preview">{previewOf(c)}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

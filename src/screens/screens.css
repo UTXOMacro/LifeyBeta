@@ -824,3 +824,74 @@
   font-size: 13px;
   color: var(--text-secondary);
 }
+
+/* ── Recent chats on the Lifey home/empty state ──────────────────────────
+   One tap back into a relevant conversation, so tapping the Lifey tab never
+   feels like being stuck. Quiet, matches the calm surface. */
+.starter-recent {
+  width: 100%;
+  max-width: 320px;
+  margin-top: 4px;
+}
+.starter-recent-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 0 4px 8px;
+}
+.starter-recent-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+.starter-recent-all {
+  background: none;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--mint);
+  padding: 2px 4px;
+}
+.starter-recent-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.starter-recent-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  text-align: left;
+  padding: 11px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--card-border);
+  background: var(--card);
+  -webkit-backdrop-filter: blur(var(--blur));
+  backdrop-filter: blur(var(--blur));
+  transition: border-color 0.15s ease, transform 0.1s ease;
+}
+.starter-recent-item:active {
+  transform: scale(0.98);
+  border-color: rgba(125, 207, 192, 0.4);
+}
+.starter-recent-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.starter-recent-preview {
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}

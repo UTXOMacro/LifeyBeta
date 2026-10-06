@@ -1,12 +1,17 @@
 import { NavLink } from 'react-router-dom';
+import { useStore } from '../store';
 
 // Four destinations only (PRD): Lifey · Today · My Life · Me.
 // Conversation-first — "Lifey" is the front door. No center capture button
 // (capture is conversational now), no social tab (social is Post-MVP).
 export function BottomNav() {
+  const goHome = useStore((s) => s.goHome);
+
+  // Tapping Lifey always lands you on a fresh composer (“home”), never stuck
+  // inside the last chat you had open. Recent chats stay one tap away.
   return (
     <nav className="tab-bar glass">
-      <NavLink to="/" className="tab-item" end>
+      <NavLink to="/" className="tab-item" end onClick={() => goHome()}>
         {({ isActive }) => (
           <>
             <Icon name="lifey" active={isActive} />
