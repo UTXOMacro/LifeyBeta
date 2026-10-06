@@ -14,6 +14,7 @@ export function YouScreen() {
   const friendsCount = useStore((s) => s.friendsCount);
   const pulse = useStore((s) => s.pulse)();
   const parts = useStore((s) => s.pulseParts)();
+  const modeState = useStore((s) => s.mode)();
 
   const highlightChips = modules.filter((m) => m.enabled && m.showOnProfile);
 
@@ -47,6 +48,23 @@ export function YouScreen() {
         careOff={!isOn(modules, 'care')}
         onHistory={() => navigate('/pulse/history')}
       />
+
+      {/* How Lifey is helping right now — transparent view of involvement.
+          Not a mode switch; the user can't set it. It explains why Lifey is
+          leaning in or staying back, so involvement never feels arbitrary. */}
+      <GlassCard className={`involvement-card mode-${modeState.mode}`}>
+        <div className="involvement-head">
+          <span className="involvement-dot" />
+          <span className="involvement-label">
+            {modeState.mode === 'cruise'
+              ? 'Giving you space'
+              : modeState.mode === 'build'
+              ? 'Helping you build'
+              : 'Here to help you reset'}
+          </span>
+        </div>
+        <p className="involvement-reason">{modeState.reason}</p>
+      </GlassCard>
 
       {/* What Lifey knows */}
       <div className="section-row">

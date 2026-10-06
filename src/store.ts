@@ -7,6 +7,7 @@ import type {
   Integration,
   IntegrationId,
   LifeContext,
+  ModeState,
   ModuleConfig,
   ModuleId,
   Preference,
@@ -22,6 +23,7 @@ import type {
 } from './types';
 import { WIDGET_META } from './data/widgets';
 import { computePulse, pulseParts } from './lib/pulse';
+import { deriveMode } from './lib/mode';
 import {
   defaultLayout,
   defaultModules,
@@ -92,6 +94,8 @@ interface LifeyState {
   // derived
   pulse: () => number;
   pulseParts: () => PulsePart[];
+  /** involvement mode (Build/Cruise/Recovery) — internal, drives tone */
+  mode: () => ModeState;
   activeModules: () => ModuleConfig[];
   activeConversation: () => Conversation | undefined;
   /** compact summary of what Lifey remembers across ALL chats */
@@ -309,6 +313,11 @@ export const useStore = create<LifeyState>((set, get) => ({
   pulseParts: () => {
     const state = get();
     return pulseParts(state.modules, state.scores);
+  },
+
+  mode: () => {
+    const state = get();
+    return deriveMode(state.modules, state.scores, state.tasks);
   },
 
   activeModules: () => get().modules.filter((m) => m.enabled),

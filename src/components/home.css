@@ -63,6 +63,22 @@
   background: var(--hairline);
   box-shadow: 0 0 12px rgba(125, 207, 192, 0.5);
 }
+
+/* Involvement mode expresses itself subtly on the Lifey Now accent.
+   Build = bright mint (energy, leaning in). Cruise = dimmed (stepped
+   back). Recovery = warm amber (supportive, never alarming). */
+.now-card.mode-build .now-hairline {
+  background: var(--mint);
+  box-shadow: 0 0 14px rgba(125, 207, 192, 0.6);
+}
+.now-card.mode-cruise .now-hairline {
+  background: rgba(125, 207, 192, 0.45);
+  box-shadow: 0 0 8px rgba(125, 207, 192, 0.25);
+}
+.now-card.mode-recovery .now-hairline {
+  background: #e8b974;
+  box-shadow: 0 0 12px rgba(232, 185, 116, 0.45);
+}
 .now-lead {
   font-size: var(--t-body);
   color: var(--text-primary);

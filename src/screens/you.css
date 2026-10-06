@@ -559,3 +559,48 @@
   border-radius: var(--radius-pill);
   border: 1px solid var(--card-border);
 }
+
+/* ─────────────────────────────────────────────────────────────
+   Involvement card (Me) — a transparent, read-only view of how
+   involved Lifey is right now (Build / Cruise / Recovery) and why.
+   Not a switch. Build = mint, Cruise = dim, Recovery = warm amber.
+   ───────────────────────────────────────────────────────────── */
+.involvement-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  margin-top: 18px;
+}
+.involvement-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.involvement-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--mint);
+  box-shadow: 0 0 8px rgba(125, 207, 192, 0.6);
+}
+.involvement-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+.involvement-reason {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin: 0;
+}
+.involvement-card.mode-cruise .involvement-dot {
+  background: rgba(125, 207, 192, 0.5);
+  box-shadow: none;
+}
+.involvement-card.mode-recovery .involvement-dot {
+  background: #e8b974;
+  box-shadow: 0 0 8px rgba(232, 185, 116, 0.5);
+}

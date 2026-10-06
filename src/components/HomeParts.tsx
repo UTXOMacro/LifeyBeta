@@ -5,6 +5,7 @@ import { mockFriends } from '../data/mock';
 import type { ModuleId, Task } from '../types';
 import { Avatar, GhostIconButton, GlassCard, ModuleChip, PulseRing } from './ui';
 import { Sparkline } from './Sparkline';
+import { MODE_VOICE } from '../lib/mode';
 
 // ─────────────────────────────────────────────────────────────
 // Home composition — fixed curated layout matching Lifey-Home-01.
@@ -40,29 +41,31 @@ export function HomeHeader({ onOpenConnect }: { onOpenConnect: (seed?: string) =
 }
 
 // ── 2. Lifey Now card ───────────────────────────────────
+// Mode-aware: the LEAD comes from the involvement mode (Build/Cruise/
+// Recovery), the FOLLOW-UP adapts how involved Lifey is. Cruise steps
+// back (gentle, optional); Build/Recovery lean in with a concrete next
+// step. This is how modes express themselves without being a UI tab.
 export function NowCard({ onOpenConnect }: { onOpenConnect: (seed?: string) => void }) {
-  const pulse = useStore((s) => s.pulse)();
-  const lead =
-    pulse >= 7
-      ? "You're on a good run — sleep is steady."
-      : pulse > 0
-      ? 'Solid footing today.'
-      : "You're in a fine place today.";
+  const profile = useStore((s) => s.profile);
+  const { mode } = useStore((s) => s.mode)();
+  const voice = MODE_VOICE[mode];
+
+  const lead = voice.lead(profile.firstName);
   const follow =
-    pulse >= 7
-      ? 'A short walk today keeps it going.'
-      : pulse > 0
-      ? 'One small move nudges you forward.'
-      : 'Enjoy the day at your own pace.';
+    mode === 'recovery'
+      ? 'Let’s pick the easiest next thing — one small win is plenty today.'
+      : mode === 'build'
+      ? 'One focused step keeps it going. Want me to line it up?'
+      : 'Nothing needed from you — I’ll be here if something comes up.';
   const seed = `${lead} ${follow}`;
 
   return (
-    <GlassCard className="now-card" onClick={() => onOpenConnect(seed)}>
+    <GlassCard className={`now-card mode-${mode}`} onClick={() => onOpenConnect(seed)}>
       <span className="now-hairline" />
       <span className="now-lead">{lead}</span>
       <span className="now-follow">{follow}</span>
       <span className="now-ask">
-        Ask <span className="now-arrow">→</span>
+        {voice.involvement === 'high' ? 'Open Lifey' : 'Ask'} <span className="now-arrow">→</span>
       </span>
     </GlassCard>
   );

@@ -14,6 +14,24 @@ export type ModuleId =
 
 export type Visibility = 'me' | 'friends' | 'everyone';
 
+// ── Involvement mode (PRD: Build / Cruise / Recovery) ───────────
+// INTERNAL framework, not a UI tab. It decides how involved Lifey
+// should be. Involvement rises when establishing change (Build) or
+// struggling (Recovery); falls when things are working (Cruise).
+// Cruise is the destination — never manufacture goals to keep Build.
+export type LifeyMode = 'build' | 'cruise' | 'recovery';
+
+// Why Lifey picked the current mode — transparent + explainable.
+export interface ModeState {
+  mode: LifeyMode;
+  /** one-line, plain-language reason (shown only if we ever surface it) */
+  reason: string;
+  /** 0–1 how sure we are; low confidence leans toward Cruise (stay out of the way) */
+  confidence: number;
+  /** supporting signals for debugging / “why am I seeing this” */
+  signals: string[];
+}
+
 // How a score entered the system. Provenance is surfaced in Pulse History.
 export type ScoreSource =
   | 'manual' // typed a number directly
